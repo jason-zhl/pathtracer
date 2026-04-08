@@ -1,9 +1,12 @@
-#include <iostream>
 #include <fstream>
-#include "vec3.h"
+#include <iostream>
+#include <memory>
 #include "color.h"
+#include "plane_patch.h"
 #include "ray.h"
 #include "sphere.h"
+#include "vec3.h"
+#include "world.h"
 
 color ray_colour(const ray& r) {
     vec3 unit_direction = unit_vector(r.direction());
@@ -20,7 +23,7 @@ int main() {
     auto viewport_width = viewport_height * (double(width) / height);
     auto focal_length = 4.5;
 
-    auto camera_center = vec3(0, 0, 0);
+    auto camera_center = vec3(0, 2, 0);
 
     auto viewport_horizontal = vec3(viewport_width, 0, 0);
     auto viewport_vertical = vec3(0, viewport_height, 0);
@@ -31,8 +34,13 @@ int main() {
     auto viewport_upper_left = camera_center + vec3(0, 0, focal_length) - viewport_horizontal / 2 + viewport_vertical / 2;
     auto pixel00 = viewport_upper_left + 0.5 * (pixel_delta_horizontal + pixel_delta_vertical);
 
-
-    sphere s(vec3(0, 0, 9), 5);
+    world scene;
+    scene.add(std::make_shared<plane_patch>(
+        vec3(-20, 0, -20),
+        vec3(40, 0, 0),
+        vec3(0, 0, 40)));
+    scene.add(std::make_shared<sphere>(vec3(4, 1, 10), 2));
+    scene.add(std::make_shared<sphere>(vec3(-4, 2, 20), 6));
 
     std::ofstream ppm_out("image.ppm");
     ppm_out << "P3\n" << width << " " << height << "\n255\n";
@@ -44,11 +52,10 @@ int main() {
             ray r(camera_center, ray_direction);
 
             color pixel_color(0, 0, 0);
-            double t = s.hit(r);
-            if (t >= 0) {
-                vec3 hit_point = r.at(t);
-                vec3 normal = unit_vector(hit_point - s.center());
-                pixel_color = 0.5 * color(normal.x() + 1, normal.y() + 1, normal.z() + 1);
+            intersection isect;
+            if (scene.hit(r, isect)) {
+                vec3 n = unit_vector(isect.surface->normal(isect.point));
+                pixel_color = 0.5 * color(n.x() + 1, n.y() + 1, n.z() + 1);
             } else {
                 pixel_color = ray_colour(r);
             }
@@ -58,5 +65,4 @@ int main() {
     ppm_out.close();
 
     return 0;
-
 }
