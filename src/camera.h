@@ -1,7 +1,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <cstdint>
 #include <fstream>
+#include "timer.h"
 #include "world.h"
 
 class camera {
@@ -37,6 +39,9 @@ class camera {
 
       *out << "P3\n" << image_width_ << " " << image_height_ << "\n255\n";
 
+      const auto total_pixels = static_cast<int64_t>(image_width_) * image_height_;
+      timer render_timer(total_pixels);
+
       for (auto j{0}; j < image_height_; j++) {
         for (auto i{0}; i < image_width_; i++) {
           const auto pixel_center = pixel00_ + (i * pixel_delta_horizontal_) - (j * pixel_delta_vertical_);
@@ -55,7 +60,12 @@ class camera {
           pixel_color /= static_cast<double>(samples_per_pixel_);
           write_color(*out, pixel_color);
         }
+
+        const auto done = static_cast<int64_t>(j + 1) * image_width_;
+        render_timer.update_progress(done);
       }
+
+      render_timer.print_complete("Render complete");
     }
 
   private:
