@@ -1,7 +1,15 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <memory>
 #include <random>
+
+using std::make_shared;
+using std::shared_ptr;
+
+#include "vec3.h"
+#include "ray.h"
+#include "color.h"
 
 inline std::mt19937& random_generator() {
   static std::mt19937 gen{std::random_device{}()};

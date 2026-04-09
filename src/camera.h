@@ -2,10 +2,6 @@
 #define CAMERA_H
 
 #include <fstream>
-#include "color.h"
-#include "global.h"
-#include "ray.h"
-#include "vec3.h"
 #include "world.h"
 
 class camera {

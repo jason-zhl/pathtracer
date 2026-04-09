@@ -3,8 +3,6 @@
 
 #include <cmath>
 #include "geometry.h"
-#include "ray.h"
-#include "vec3.h"
 
 // Finite planar patch: corner + s*u + t*v for s,t in [0,1] (parallelogram).
 class plane_patch : public geometry {

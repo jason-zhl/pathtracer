@@ -3,16 +3,13 @@
 
 #include "geometry.h"
 #include <limits>
-#include <memory>
 #include <vector>
-
-class ray;
 
 class world {
   public:
     world() = default;
 
-    void add(std::shared_ptr<geometry> object) { objects.push_back(object); }
+    void add(shared_ptr<geometry> object) { objects.push_back(object); }
 
     void clear() { objects.clear(); }
 
@@ -36,7 +33,7 @@ class world {
     }
 
   private:
-    std::vector<std::shared_ptr<geometry>> objects;
+    std::vector<shared_ptr<geometry>> objects;
 };
 
 #endif
