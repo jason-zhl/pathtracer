@@ -3,10 +3,12 @@
 
 #include <cmath>
 #include "geometry.h"
+#include "material/material.h"
 
 class sphere : public geometry {
   public:
-    sphere(const vec3& center, double radius) : center_(center), radius_(std::fabs(radius)) {}
+    sphere(const vec3& center, double radius, shared_ptr<material> mat)
+      : center_(center), radius_(std::fabs(radius)), mat_(std::move(mat)) {}
 
     const vec3& center() const { return center_; }
     double radius() const { return radius_; }
@@ -17,6 +19,7 @@ class sphere : public geometry {
   private:
     vec3 center_;
     double radius_;
+    shared_ptr<material> mat_;
 };
 
 bool sphere::hit(const ray& r, const interval* t_range, intersection& isect) const {
@@ -42,6 +45,7 @@ bool sphere::hit(const ray& r, const interval* t_range, intersection& isect) con
   isect.point = r.at(t);
   isect.t = t;
   isect.surface = this;
+  isect.mat = mat_;
   return true;
 }
 

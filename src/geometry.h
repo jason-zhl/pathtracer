@@ -3,6 +3,7 @@
 
 #include "global.h"
 
+class material;
 class intersection;
 
 class geometry {
@@ -17,6 +18,7 @@ class intersection {
     vec3 point;
     double t = 0;
     const geometry* surface = nullptr;
+    shared_ptr<material> mat;
 };
 
 #endif

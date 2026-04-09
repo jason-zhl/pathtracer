@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <fstream>
 #include "timer.h"
+#include "material/material.h"
 #include "world.h"
 
 class camera {
@@ -75,15 +76,12 @@ class camera {
 
       intersection isect;
       if (scene.hit(r, &ray_t_, isect)) {
-        vec3 n = unit_vector(isect.surface->normal(isect.point));
-        if (dot(r.direction(), n) > 0.0) {
-          n = -n;
+        ray scattered;
+        color attenuation;
+        if (isect.mat != nullptr && isect.mat->scatter(r, isect, attenuation, scattered)) {
+          return attenuation * ray_colour(scattered, max_depth - 1, scene);
         }
-        const vec3 diffuse_direction = unit_vector(lambertian_random(n));
-        const double surface_offset = 1e-3;
-        const vec3 scatter_origin = isect.point + n * surface_offset;
-        // Temporary albedo of 0.5
-        return 0.5 * ray_colour(ray(scatter_origin, diffuse_direction), max_depth - 1, scene);
+        return color(0, 0, 0);
       }
 
       vec3 unit_direction = unit_vector(r.direction());

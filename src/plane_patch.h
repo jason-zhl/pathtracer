@@ -3,12 +3,18 @@
 
 #include <cmath>
 #include "geometry.h"
+#include "material/material.h"
 
 // Finite planar patch: corner + s*u + t*v for s,t in [0,1] (parallelogram).
 class plane_patch : public geometry {
   public:
-    plane_patch(const vec3& corner, const vec3& u, const vec3& v)
-        : corner_(corner), u_(u), v_(v), n_(cross(u, v)), n_len_sq_(n_.length_squared()) {}
+    plane_patch(const vec3& corner, const vec3& u, const vec3& v, shared_ptr<material> mat)
+        : corner_(corner),
+          u_(u),
+          v_(v),
+          n_(cross(u, v)),
+          n_len_sq_(n_.length_squared()),
+          mat_(std::move(mat)) {}
 
     bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
     vec3 normal(const vec3& point) const override;
@@ -19,6 +25,7 @@ class plane_patch : public geometry {
     vec3 v_;
     vec3 n_;
     double n_len_sq_;
+    shared_ptr<material> mat_;
 };
 
 inline bool plane_patch::hit(const ray& r, const interval* t_range, intersection& isect) const {
@@ -46,6 +53,7 @@ inline bool plane_patch::hit(const ray& r, const interval* t_range, intersection
   isect.point = p;
   isect.t = t;
   isect.surface = this;
+  isect.mat = mat_;
   return true;
 }
 
