@@ -3,14 +3,15 @@
 
 #include <fstream>
 #include "color.h"
+#include "global.h"
 #include "ray.h"
 #include "vec3.h"
 #include "world.h"
 
 class camera {
   public:
-    camera(int image_width, double aspect_ratio)
-      : image_width_(image_width) {
+    camera(int image_width, double aspect_ratio, int samples_per_pixel = 10)
+      : image_width_(image_width), samples_per_pixel_(samples_per_pixel) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
 
       const auto viewport_height = 9.0;
@@ -43,17 +44,25 @@ class camera {
       for (auto j{0}; j < image_height_; j++) {
         for (auto i{0}; i < image_width_; i++) {
           const auto pixel_center = pixel00_ + (i * pixel_delta_horizontal_) - (j * pixel_delta_vertical_);
-          const ray r(center_, pixel_center - center_);
 
           color pixel_color(0, 0, 0);
-          intersection isect;
-          if (scene.hit(r, isect)) {
-            const vec3 n = unit_vector(isect.surface->normal(isect.point));
-            pixel_color = 0.5 * color(n.x() + 1, n.y() + 1, n.z() + 1);
-          } else {
-            pixel_color = ray_colour(r);
-          }
+          for (auto s{0}; s < samples_per_pixel_; s++) {
+            const auto u = random_double(-0.5, 0.5);
+            const auto v = random_double(-0.5, 0.5);
+            const auto sample_point = pixel_center
+              + u * pixel_delta_horizontal_
+              - v * pixel_delta_vertical_;
+            const ray r(center_, sample_point - center_);
 
+            intersection isect;
+            if (scene.hit(r, isect)) {
+              const vec3 n = unit_vector(isect.surface->normal(isect.point));
+              pixel_color += 0.5 * color(n.x() + 1, n.y() + 1, n.z() + 1);
+            } else {
+              pixel_color += ray_colour(r);
+            }
+          }
+          pixel_color /= static_cast<double>(samples_per_pixel_);
           write_color(*out, pixel_color);
         }
       }
@@ -68,6 +77,7 @@ class camera {
 
     int image_width_ = 0;
     int image_height_ = 0;
+    int samples_per_pixel_ = 10;
     vec3 center_;
     vec3 pixel00_;
     vec3 pixel_delta_horizontal_;
