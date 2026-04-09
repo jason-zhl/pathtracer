@@ -1,7 +1,7 @@
-pathtracer.exe: *.cpp *.h
-	g++ -O3 -Wall -std=c++23 main.cpp -o pathtracer.exe
+PathTracer.exe: ./src/*.cpp ./src/*.h
+	g++ -O3 -Wall -std=c++23 ./src/main.cpp -o PathTracer.exe
 
-all: pathtracer.exe
+all: PathTracer.exe
 
-run: pathtracer.exe
+run: PathTracer.exe
 	./pathtracer.exe

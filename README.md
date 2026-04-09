@@ -1,4 +1,4 @@
-# Ray tracer
+# PathTracer
 
 Small C++ ray tracer: spheres, a finite ground patch (`plane_patch`), normal visualization, PPM output.
 
