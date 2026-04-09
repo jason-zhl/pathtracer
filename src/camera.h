@@ -50,13 +50,7 @@ class camera {
               - v * pixel_delta_vertical_;
             const ray r(center_, sample_point - center_);
 
-            intersection isect;
-            if (scene.hit(r, isect)) {
-              const vec3 n = unit_vector(isect.surface->normal(isect.point));
-              pixel_color += 0.5 * color(n.x() + 1, n.y() + 1, n.z() + 1);
-            } else {
-              pixel_color += ray_colour(r);
-            }
+            pixel_color += ray_colour(r, max_depth, scene);
           }
           pixel_color /= static_cast<double>(samples_per_pixel_);
           write_color(*out, pixel_color);
@@ -65,15 +59,32 @@ class camera {
     }
 
   private:
-    color ray_colour(const ray& r) const {
-      const vec3 unit_direction = unit_vector(r.direction());
-      const auto a = 0.5 * (unit_direction.y() + 1.0);
-      return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+    color ray_colour(const ray& r, int max_depth, const world& scene) const {
+      if (max_depth <= 0)
+        return color(0, 0, 0);
+
+      intersection isect;
+      if (scene.hit(r, isect)) {
+        vec3 n = unit_vector(isect.surface->normal(isect.point));
+        if (dot(r.direction(), n) > 0.0) {
+          n = -n;
+        }
+        const vec3 diffuse_direction = unit_vector(lambertian_random(n));
+        const double surface_offset = 1e-3;
+        const vec3 scatter_origin = isect.point + n * surface_offset;
+        // Temporary albedo of 0.5
+        return 0.5 * ray_colour(ray(scatter_origin, diffuse_direction), max_depth - 1, scene);
+      }
+
+      vec3 unit_direction = unit_vector(r.direction());
+      auto a = 0.5*(unit_direction.y() + 1.0);
+      return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
     }
 
     int image_width_ = 0;
     int image_height_ = 0;
-    int samples_per_pixel_ = 10;
+    int samples_per_pixel_ = 50;
+    int max_depth = 10;
     vec3 center_;
     vec3 pixel00_;
     vec3 pixel_delta_horizontal_;

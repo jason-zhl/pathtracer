@@ -28,9 +28,14 @@ bool sphere::hit(const ray& r, intersection& isect) const {
   if (discriminant < 0) {
     return false;
   }
-  auto t = (-b - std::sqrt(discriminant)) / (2.0 * a);
-  if (t < 0) {
-    return false;
+  const auto sqrt_d = std::sqrt(discriminant);
+  auto t = (-b - sqrt_d) / (2.0 * a);
+  const auto t_min = 1e-3;
+  if (t < t_min) {
+    t = (-b + sqrt_d) / (2.0 * a);
+    if (t < t_min) {
+      return false;
+    }
   }
   isect.point = r.at(t);
   isect.t = t;

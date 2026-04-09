@@ -91,4 +91,27 @@ inline vec3 unit_vector(const vec3& v) {
   return v / v.length();
 }
 
+// Branchless ONB method, by Duff et al.
+inline void orthonormal_basis(const vec3& n, vec3& t, vec3& b) {
+  double sign = std::copysign(1.0, n.z());
+  const double a = -1.0 / (sign + n.z());
+  const double b_val = n.x() * n.y() * a;
+  t = vec3(1.0 + sign * n.x() * n.x() * a, sign * b_val, -sign * n.x());
+  b = vec3(sign * b_val, sign + n.y() * n.y() * a, -n.y());
+}
+
+// Cosine-weighted importance sampling for diffuse surfaces
+inline vec3 lambertian_random(const vec3& n) {
+  double u = random_double();
+  double v = random_double();
+  double phi = 2 * PI * u;
+  double r = std::sqrt(v);
+  double x = r * std::cos(phi);
+  double y = r * std::sin(phi);
+  double z = std::sqrt(1.0 - v);
+  vec3 t, b;
+  orthonormal_basis(n, t, b);
+  return t * x + b * y + n * z;
+}
+
 #endif

@@ -30,7 +30,8 @@ inline bool plane_patch::hit(const ray& r, intersection& isect) const {
     return false;
   }
   double t = dot(corner_ - r.origin(), n_) / denom;
-  if (t < 0) {
+  const double t_min = 1e-7;
+  if (t < t_min) {
     return false;
   }
   vec3 p = r.at(t);
