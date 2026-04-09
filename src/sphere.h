@@ -11,7 +11,7 @@ class sphere : public geometry {
     const vec3& center() const { return center_; }
     double radius() const { return radius_; }
 
-    bool hit(const ray& r, intersection& isect) const override;
+    bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
     vec3 normal(const vec3& point) const override;
 
   private:
@@ -19,7 +19,10 @@ class sphere : public geometry {
     double radius_;
 };
 
-bool sphere::hit(const ray& r, intersection& isect) const {
+bool sphere::hit(const ray& r, const interval* t_range, intersection& isect) const {
+  if (t_range == nullptr) {
+    return false;
+  }
   vec3 oc = r.origin() - center_;
   auto a = dot(r.direction(), r.direction());
   auto b = 2.0 * dot(oc, r.direction());
@@ -30,10 +33,9 @@ bool sphere::hit(const ray& r, intersection& isect) const {
   }
   const auto sqrt_d = std::sqrt(discriminant);
   auto t = (-b - sqrt_d) / (2.0 * a);
-  const auto t_min = 1e-3;
-  if (t < t_min) {
+  if (!t_range->surrounds(t)) {
     t = (-b + sqrt_d) / (2.0 * a);
-    if (t < t_min) {
+    if (!t_range->surrounds(t)) {
       return false;
     }
   }

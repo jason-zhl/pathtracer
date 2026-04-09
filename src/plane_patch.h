@@ -10,7 +10,7 @@ class plane_patch : public geometry {
     plane_patch(const vec3& corner, const vec3& u, const vec3& v)
         : corner_(corner), u_(u), v_(v), n_(cross(u, v)), n_len_sq_(n_.length_squared()) {}
 
-    bool hit(const ray& r, intersection& isect) const override;
+    bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
     vec3 normal(const vec3& point) const override;
 
   private:
@@ -21,7 +21,10 @@ class plane_patch : public geometry {
     double n_len_sq_;
 };
 
-inline bool plane_patch::hit(const ray& r, intersection& isect) const {
+inline bool plane_patch::hit(const ray& r, const interval* t_range, intersection& isect) const {
+  if (t_range == nullptr) {
+    return false;
+  }
   if (n_len_sq_ < 1e-30) {
     return false;
   }
@@ -30,8 +33,7 @@ inline bool plane_patch::hit(const ray& r, intersection& isect) const {
     return false;
   }
   double t = dot(corner_ - r.origin(), n_) / denom;
-  const double t_min = 1e-7;
-  if (t < t_min) {
+  if (!t_range->surrounds(t)) {
     return false;
   }
   vec3 p = r.at(t);

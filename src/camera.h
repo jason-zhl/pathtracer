@@ -64,7 +64,7 @@ class camera {
         return color(0, 0, 0);
 
       intersection isect;
-      if (scene.hit(r, isect)) {
+      if (scene.hit(r, &ray_t_, isect)) {
         vec3 n = unit_vector(isect.surface->normal(isect.point));
         if (dot(r.direction(), n) > 0.0) {
           n = -n;
@@ -85,6 +85,7 @@ class camera {
     int image_height_ = 0;
     int samples_per_pixel_ = 50;
     int max_depth = 10;
+    const interval ray_t_{1e-3, INF};
     vec3 center_;
     vec3 pixel00_;
     vec3 pixel_delta_horizontal_;

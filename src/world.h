@@ -2,7 +2,6 @@
 #define WORLD_H
 
 #include "geometry.h"
-#include <limits>
 #include <vector>
 
 class world {
@@ -13,16 +12,23 @@ class world {
 
     void clear() { objects.clear(); }
 
-    bool hit(const ray& r, intersection& isect) const {
+    bool hit(const ray& r, const interval* t_range, intersection& isect) const {
+      if (t_range == nullptr) {
+        return false;
+      }
+
       intersection closest;
-      closest.t = std::numeric_limits<double>::infinity();
+      double closest_t = t_range->max;
       bool hit_anything = false;
 
       for (const auto& obj : objects) {
         intersection temp;
-        if (obj->hit(r, temp) && temp.t < closest.t) {
-          closest = temp;
-          hit_anything = true;
+        if (obj->hit(r, t_range, temp)) {
+          if (!hit_anything || temp.t < closest_t) {
+            closest = temp;
+            closest_t = temp.t;
+            hit_anything = true;
+          }
         }
       }
 

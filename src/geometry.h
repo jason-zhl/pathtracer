@@ -8,7 +8,7 @@ class intersection;
 class geometry {
   public:
     virtual ~geometry() = default;
-    virtual bool hit(const ray& r, intersection& isect) const = 0;
+    virtual bool hit(const ray& r, const interval* t_range, intersection& isect) const = 0;
     virtual vec3 normal(const vec3& point) const = 0;
 };
 
