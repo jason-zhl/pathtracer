@@ -19,13 +19,6 @@ class plastic : public material {
       const vec3 wi = -unit_vector(r_in.direction());
       const double cos_i = std::max(0.0, dot(n, wi));
 
-      static constexpr double k_eps = 1e-8;
-      static constexpr int k_max_spec_tries = 32;
-      // Balance heuristic: n_diffuse = n_specular = 1 → pick each technique with probability 1/2.
-      static constexpr double n_diff = 1.0;
-      static constexpr double n_spec = 1.0;
-      static constexpr double n_sum = n_diff + n_spec;
-
       if (random_double() * n_sum < n_spec) {
         for (int attempt = 0; attempt < k_max_spec_tries; ++attempt) {
           const vec3 h = sample_ggx(n);
@@ -82,6 +75,12 @@ class plastic : public material {
     double a2_;
     static constexpr double surface_offset = 1e-3;
     static constexpr double k_dielectric_f0 = 0.04;
+    static constexpr double k_eps = 1e-8;
+    static constexpr int k_max_spec_tries = 32;
+    // Balance heuristic: n_diffuse = n_specular = 1 → pick each technique with probability 1/2.
+    static constexpr double n_diff = 1.0;
+    static constexpr double n_spec = 1.0;
+    static constexpr double n_sum = n_diff + n_spec;
 
     static double pdf_diffuse(double ndotwo) { return ndotwo / PI; }
 
