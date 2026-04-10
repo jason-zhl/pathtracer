@@ -4,7 +4,9 @@
 #include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include "timer.h"
+#include "material/diffuse_light.h"
 #include "material/material.h"
 #include "world.h"
 
@@ -14,9 +16,9 @@ class camera {
       : image_width_(image_width), samples_per_pixel_(samples_per_pixel) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
 
-      const auto viewport_height = 8.0;
+      const auto viewport_height = 4.0;
       const auto viewport_width = viewport_height * (double(image_width_) / image_height_);
-      const auto focal_length = 4.0;
+      const auto focal_length = 2.5;
 
       center_ = vec3(0, 3, 0);
 
@@ -80,63 +82,84 @@ class camera {
       return denom > 0.0 ? a / denom : 0.0;
     }
 
-    color ray_colour(const ray& r, int max_depth, const world& scene) const {
+    color ray_colour(const ray& r, int max_depth, const world& scene,
+      const intersection* prev_isect = nullptr, const ray* prev_ray_in = nullptr) const {
       if (max_depth <= 0)
         return color(0, 0, 0);
 
       intersection isect;
-      if (scene.hit(r, &ray_t_, isect)) {
-        vec3 n = unit_vector(isect.surface->normal(isect.point));
-        if (dot(r.direction(), n) > 0.0) {
-          n = -n;
-        }
-
-        color L = color(0, 0, 0);
-
-        if (scene.has_ibl() && isect.mat != nullptr) {
-          vec3 wo_env;
-          double pdf_env = 0.0;
-          scene.sample_env(wo_env, pdf_env);
-          if (pdf_env > 0.0 && dot(n, wo_env) > 0.0) {
-            ray env_ray(isect.point + n * 1e-3, wo_env);
-            intersection shadow_isect;
-            if (!scene.hit(env_ray, &ray_t_, shadow_isect)) {
-              const color f_env = isect.mat->eval(r, isect, wo_env);
-              const double pdf_mat = isect.mat->pdf(r, isect, wo_env);
-              const double mis_w = mis_weight_power(pdf_env, pdf_mat);
-              const vec3 Le = scene.get_env(wo_env);
-              L += mis_w * f_env * Le * dot(n, wo_env) / pdf_env;
-            }
-          }
-        }
-
-        ray scattered;
-        color attenuation;
-        if (isect.mat != nullptr && isect.mat->scatter(r, isect, attenuation, scattered)) {
-          intersection bounce_isect;
-          if (!scene.hit(scattered, &ray_t_, bounce_isect)) {
-            const vec3 Le = scene.get_env(scattered.direction());
-            if (scene.has_ibl()) {
-              const double pdf_env = scene.ibl_pdf(scattered.direction());
-              const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
-              const double mis_w = mis_weight_power(pdf_mat, pdf_env);
-              L += mis_w * attenuation * Le;
-            } else {
-              L += attenuation * Le;
-            }
-          } else {
-            L += attenuation * ray_colour(scattered, max_depth - 1, scene);
-          }
-        }
-        return L;
+      if (!scene.hit(r, &ray_t_, isect)) {
+        return scene.get_env(r.direction());
       }
-      return scene.get_env(r.direction());
+
+      vec3 n = unit_vector(isect.surface->normal(isect.point));
+      if (dot(r.direction(), n) > 0.0) {
+        n = -n;
+      }
+
+      color L = color(0, 0, 0);
+      if (const auto emissive = std::dynamic_pointer_cast<diffuse_light>(isect.mat)) {
+        color Le = emissive->emitted(r, isect);
+        if (prev_isect != nullptr && prev_ray_in != nullptr && scene.has_area_lights()) {
+          const vec3 wo = unit_vector(r.direction());
+          const double pdf_nee =
+            scene.area_light_pdf_nee_at_receiver(prev_isect->point, wo, isect.surface, isect.point);
+          if (pdf_nee > 0.0 && prev_isect->mat != nullptr) {
+            const double pdf_mat = prev_isect->mat->pdf(*prev_ray_in, *prev_isect, wo);
+            const double w_bsdf = nee_mis_weight(pdf_mat, pdf_nee);
+            Le *= w_bsdf;
+          }
+        }
+        L += Le;
+      }
+
+      if (scene.has_ibl() && isect.mat != nullptr) {
+        vec3 wo_env;
+        double pdf_env = 0.0;
+        scene.sample_env(wo_env, pdf_env);
+        if (pdf_env > 0.0 && dot(n, wo_env) > 0.0) {
+          ray env_ray(isect.point + n * 1e-3, wo_env);
+          intersection shadow_isect;
+          if (!scene.hit(env_ray, &ray_t_, shadow_isect)) {
+            const color f_env = isect.mat->eval(r, isect, wo_env);
+            const double pdf_mat = isect.mat->pdf(r, isect, wo_env);
+            const double mis_w = mis_weight_power(pdf_env, pdf_mat);
+            const vec3 Le = scene.get_env(wo_env);
+            L += mis_w * f_env * Le * dot(n, wo_env) / pdf_env;
+          }
+        }
+      }
+
+      if (scene.has_area_lights() && isect.mat != nullptr
+        && std::dynamic_pointer_cast<diffuse_light>(isect.mat) == nullptr) {
+        L += scene.area_light_nee(r, isect, n);
+      }
+
+      ray scattered;
+      color attenuation;
+      if (isect.mat != nullptr && isect.mat->scatter(r, isect, attenuation, scattered)) {
+        intersection bounce_isect;
+        if (!scene.hit(scattered, &ray_t_, bounce_isect)) {
+          const vec3 Le = scene.get_env(scattered.direction());
+          if (scene.has_ibl()) {
+            const double pdf_env = scene.ibl_pdf(scattered.direction());
+            const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
+            const double mis_w = mis_weight_power(pdf_mat, pdf_env);
+            L += mis_w * attenuation * Le;
+          } else {
+            L += attenuation * Le;
+          }
+        } else {
+          L += attenuation * ray_colour(scattered, max_depth - 1, scene, &isect, &r);
+        }
+      }
+      return L;
     }
 
     int image_width_ = 0;
     int image_height_ = 0;
     int samples_per_pixel_ = 50;
-    int max_depth = 10;
+    int max_depth = 5;
     const interval ray_t_{1e-3, INF};
     vec3 center_;
     vec3 pixel00_;

@@ -18,6 +18,8 @@ class plane_patch : public geometry {
 
     bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
     vec3 normal(const vec3& point) const override;
+    bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const override;
+    double surface_area() const override;
 
   private:
     vec3 corner_;
@@ -60,6 +62,23 @@ inline bool plane_patch::hit(const ray& r, const interval* t_range, intersection
 inline vec3 plane_patch::normal(const vec3& point) const {
   (void)point;
   return n_;
+}
+
+inline bool plane_patch::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+  const double su = random_double();
+  const double sv = random_double();
+  p = corner_ + su * u_ + sv * v_;
+  n = unit_vector(n_);
+  const double a = std::sqrt(n_len_sq_);
+  if (a < 1e-30) {
+    return false;
+  }
+  pdf_area = 1.0 / a;
+  return true;
+}
+
+inline double plane_patch::surface_area() const {
+  return std::sqrt(n_len_sq_);
 }
 
 #endif

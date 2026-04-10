@@ -119,6 +119,16 @@ inline void orthonormal_basis(const vec3& n, vec3& t, vec3& b) {
   b = vec3(sign * b_val, sign + n.y() * n.y() * a, -n.y());
 }
 
+inline vec3 random_unit_vector() {
+  for (;;) {
+    vec3 p(random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0);
+    const double len2 = p.length_squared();
+    if (len2 <= 1.0 && len2 > 1e-20) {
+      return p / std::sqrt(len2);
+    }
+  }
+}
+
 // Cosine-weighted importance sampling for diffuse surfaces
 inline vec3 lambertian_random(const vec3& n) {
   double u = random_double();

@@ -15,6 +15,8 @@ class sphere : public geometry {
 
     bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
     vec3 normal(const vec3& point) const override;
+    bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const override;
+    double surface_area() const override;
 
   private:
     vec3 center_;
@@ -51,6 +53,17 @@ bool sphere::hit(const ray& r, const interval* t_range, intersection& isect) con
 
 vec3 sphere::normal(const vec3& point) const {
   return (point - center_);
+}
+
+bool sphere::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+  n = random_unit_vector();
+  p = center_ + radius_ * n;
+  pdf_area = 1.0 / (4.0 * PI * radius_ * radius_);
+  return true;
+}
+
+double sphere::surface_area() const {
+  return 4.0 * PI * radius_ * radius_;
 }
 
 #endif
