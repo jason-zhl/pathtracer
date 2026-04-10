@@ -47,10 +47,10 @@ class world {
       if (ibl_) {
         return ibl_->value(direction);
       }
-      return vec3(0, 0, 0);
+      return vec3(1.0, 1.0, 1.0);
     }
 
-    void sample_ibl_direction(vec3& out_direction, double& out_pdf) const {
+    void sample_env(vec3& out_direction, double& out_pdf) const {
       if (ibl_) {
         ibl_->sample_direction(out_direction, out_pdf);
       } else {

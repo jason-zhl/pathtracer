@@ -105,8 +105,8 @@ class plastic : public material {
     static constexpr double k_eps = 1e-8;
     static constexpr int k_max_spec_tries = 32;
     // Balance heuristic: n_diffuse = n_specular = 1 → pick each technique with probability 1/2.
-    static constexpr double n_diff = 1.0;
-    static constexpr double n_spec = 1.0;
+    static constexpr double n_diff = 0.7;
+    static constexpr double n_spec = 0.3;
     static constexpr double n_sum = n_diff + n_spec;
 
     static double pdf_diffuse(double ndotwo) { return ndotwo / PI; }

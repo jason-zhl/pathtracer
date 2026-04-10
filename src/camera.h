@@ -1,6 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include "timer.h"
@@ -13,11 +14,11 @@ class camera {
       : image_width_(image_width), samples_per_pixel_(samples_per_pixel) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
 
-      const auto viewport_height = 9.0;
+      const auto viewport_height = 8.0;
       const auto viewport_width = viewport_height * (double(image_width_) / image_height_);
-      const auto focal_length = 4.5;
+      const auto focal_length = 4.0;
 
-      center_ = vec3(0, 2, 0);
+      center_ = vec3(0, 3, 0);
 
       const auto viewport_horizontal = vec3(viewport_width, 0, 0);
       const auto viewport_vertical = vec3(0, viewport_height, 0);
@@ -70,6 +71,15 @@ class camera {
     }
 
   private:
+    /** Power heuristic MIS weight for strategy with pdf_self vs the other; β = 2 (Veach). */
+    static double mis_weight_power(double pdf_self, double pdf_other) {
+      constexpr double beta = 2.0;
+      const double a = std::pow(pdf_self, beta);
+      const double b = std::pow(pdf_other, beta);
+      const double denom = a + b;
+      return denom > 0.0 ? a / denom : 0.0;
+    }
+
     color ray_colour(const ray& r, int max_depth, const world& scene) const {
       if (max_depth <= 0)
         return color(0, 0, 0);
@@ -86,14 +96,14 @@ class camera {
         if (scene.has_ibl() && isect.mat != nullptr) {
           vec3 wo_env;
           double pdf_env = 0.0;
-          scene.sample_ibl_direction(wo_env, pdf_env);
+          scene.sample_env(wo_env, pdf_env);
           if (pdf_env > 0.0 && dot(n, wo_env) > 0.0) {
             ray env_ray(isect.point + n * 1e-3, wo_env);
             intersection shadow_isect;
             if (!scene.hit(env_ray, &ray_t_, shadow_isect)) {
               const color f_env = isect.mat->eval(r, isect, wo_env);
               const double pdf_mat = isect.mat->pdf(r, isect, wo_env);
-              const double mis_w = pdf_env / (pdf_env + pdf_mat);
+              const double mis_w = mis_weight_power(pdf_env, pdf_mat);
               const vec3 Le = scene.get_env(wo_env);
               L += mis_w * f_env * Le * dot(n, wo_env) / pdf_env;
             }
@@ -109,7 +119,7 @@ class camera {
             if (scene.has_ibl()) {
               const double pdf_env = scene.ibl_pdf(scattered.direction());
               const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
-              const double mis_w = pdf_mat / (pdf_mat + pdf_env);
+              const double mis_w = mis_weight_power(pdf_mat, pdf_env);
               L += mis_w * attenuation * Le;
             } else {
               L += attenuation * Le;
