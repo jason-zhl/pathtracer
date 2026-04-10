@@ -20,6 +20,30 @@ class lambertian : public material {
       return true;
     }
 
+    color eval(const ray& r_in, const intersection& rec, const vec3& wo) const override {
+      vec3 n = unit_vector(rec.surface->normal(rec.point));
+      if (dot(r_in.direction(), n) > 0.0) {
+        n = -n;
+      }
+      const double ndotwo = dot(n, unit_vector(wo));
+      if (ndotwo <= 0.0) {
+        return color(0, 0, 0);
+      }
+      return albedo_ / PI;
+    }
+
+    double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const override {
+      vec3 n = unit_vector(rec.surface->normal(rec.point));
+      if (dot(r_in.direction(), n) > 0.0) {
+        n = -n;
+      }
+      const double ndotwo = dot(n, unit_vector(wo));
+      if (ndotwo <= 0.0) {
+        return 0.0;
+      }
+      return ndotwo / PI;
+    }
+
   private:
     color albedo_;
 };

@@ -26,6 +26,13 @@ class vec3 {
       return *this;
     }
 
+    vec3& operator+=(double t) {
+      e[0] += t;
+      e[1] += t;
+      e[2] += t;
+      return *this;
+    }
+
     vec3& operator*=(double t) {
       e[0] *= t;
       e[1] *= t;
@@ -55,6 +62,14 @@ inline vec3 operator+(const vec3& u, const vec3& v) {
   return vec3(u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]);
 }
 
+inline vec3 operator+(const vec3& v, double t) {
+  return vec3(v.e[0] + t, v.e[1] + t, v.e[2] + t);
+}
+
+inline vec3 operator+(double t, const vec3& v) {
+  return v + t;
+}
+
 inline vec3 operator-(const vec3& u, const vec3& v) {
   return vec3(u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]);
 }
@@ -73,6 +88,10 @@ inline vec3 operator*(const vec3& v, double t) {
 
 inline vec3 operator/(const vec3& v, double t) {
   return (1/t) * v;
+}
+
+inline vec3 operator/(const vec3& u, const vec3& v) {
+  return vec3(u.e[0] / v.e[0], u.e[1] / v.e[1], u.e[2] / v.e[2]);
 }
 
 inline double dot(const vec3& u, const vec3& v) {

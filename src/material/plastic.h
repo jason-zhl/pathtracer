@@ -68,6 +68,33 @@ class plastic : public material {
       return true;
     }
 
+    color eval(const ray& r_in, const intersection& rec, const vec3& wo) const override {
+      vec3 n = unit_vector(rec.surface->normal(rec.point));
+      if (dot(r_in.direction(), n) > 0.0) {
+        n = -n;
+      }
+      const vec3 wi = -unit_vector(r_in.direction());
+      const double cos_i = std::max(0.0, dot(n, wi));
+      const vec3 wou = unit_vector(wo);
+      return eval_brdf(wi, wou, n, cos_i);
+    }
+
+    double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const override {
+      vec3 n = unit_vector(rec.surface->normal(rec.point));
+      if (dot(r_in.direction(), n) > 0.0) {
+        n = -n;
+      }
+      const vec3 wi = -unit_vector(r_in.direction());
+      const vec3 wou = unit_vector(wo);
+      const double ndotwo = dot(n, wou);
+      if (ndotwo <= k_eps) {
+        return 0.0;
+      }
+      const double pdf_d = pdf_diffuse(ndotwo);
+      const double pdf_s = pdf_specular(wi, wou, n);
+      return (n_diff * pdf_d + n_spec * pdf_s) / n_sum;
+    }
+
   private:
     color albedo_;
     double roughness_;

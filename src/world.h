@@ -3,6 +3,7 @@
 
 #include "geometry.h"
 #include <vector>
+#include "IBL/ibl.h"
 
 class world {
   public:
@@ -38,8 +39,36 @@ class world {
       return hit_anything;
     }
 
+    void set_ibl(std::unique_ptr<ibl> env) { ibl_ = std::move(env); }
+
+    bool has_ibl() const { return ibl_ != nullptr; }
+
+    vec3 get_env(const vec3& direction) const {
+      if (ibl_) {
+        return ibl_->value(direction);
+      }
+      return vec3(0, 0, 0);
+    }
+
+    void sample_ibl_direction(vec3& out_direction, double& out_pdf) const {
+      if (ibl_) {
+        ibl_->sample_direction(out_direction, out_pdf);
+      } else {
+        out_pdf = 0.0;
+        out_direction = vec3(0, 1, 0);
+      }
+    }
+
+    double ibl_pdf(const vec3& direction) const {
+      if (ibl_) {
+        return ibl_->pdf(direction);
+      }
+      return 0.0;
+    }
+
   private:
     std::vector<shared_ptr<geometry>> objects;
+    std::unique_ptr<ibl> ibl_;
 };
 
 #endif

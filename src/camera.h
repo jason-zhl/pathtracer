@@ -76,17 +76,51 @@ class camera {
 
       intersection isect;
       if (scene.hit(r, &ray_t_, isect)) {
+        vec3 n = unit_vector(isect.surface->normal(isect.point));
+        if (dot(r.direction(), n) > 0.0) {
+          n = -n;
+        }
+
+        color L = color(0, 0, 0);
+
+        if (scene.has_ibl() && isect.mat != nullptr) {
+          vec3 wo_env;
+          double pdf_env = 0.0;
+          scene.sample_ibl_direction(wo_env, pdf_env);
+          if (pdf_env > 0.0 && dot(n, wo_env) > 0.0) {
+            ray env_ray(isect.point + n * 1e-3, wo_env);
+            intersection shadow_isect;
+            if (!scene.hit(env_ray, &ray_t_, shadow_isect)) {
+              const color f_env = isect.mat->eval(r, isect, wo_env);
+              const double pdf_mat = isect.mat->pdf(r, isect, wo_env);
+              const double mis_w = pdf_env / (pdf_env + pdf_mat);
+              const vec3 Le = scene.get_env(wo_env);
+              L += mis_w * f_env * Le * dot(n, wo_env) / pdf_env;
+            }
+          }
+        }
+
         ray scattered;
         color attenuation;
         if (isect.mat != nullptr && isect.mat->scatter(r, isect, attenuation, scattered)) {
-          return attenuation * ray_colour(scattered, max_depth - 1, scene);
+          intersection bounce_isect;
+          if (!scene.hit(scattered, &ray_t_, bounce_isect)) {
+            const vec3 Le = scene.get_env(scattered.direction());
+            if (scene.has_ibl()) {
+              const double pdf_env = scene.ibl_pdf(scattered.direction());
+              const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
+              const double mis_w = pdf_mat / (pdf_mat + pdf_env);
+              L += mis_w * attenuation * Le;
+            } else {
+              L += attenuation * Le;
+            }
+          } else {
+            L += attenuation * ray_colour(scattered, max_depth - 1, scene);
+          }
         }
-        return color(0, 0, 0);
+        return L;
       }
-
-      vec3 unit_direction = unit_vector(r.direction());
-      auto a = 0.5*(unit_direction.y() + 1.0);
-      return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+      return scene.get_env(r.direction());
     }
 
     int image_width_ = 0;
