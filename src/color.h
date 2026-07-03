@@ -19,10 +19,11 @@ inline vec3 ACESFilm(const vec3& x) {
                 std::clamp(y.z(), 0.0, 1.0));
 }
 
-static constexpr double exposure = 1.2;
+// static constexpr double exposure = 1.2;
 
 inline void write_color(std::ostream &out, const color& pixel_color) {
-  const auto scaled = ACESFilm(pixel_color * exposure);
+  // const auto scaled = ACESFilm(pixel_color * exposure);
+  const auto scaled = ACESFilm(pixel_color);
   out << static_cast<int>(255.999 * scaled.x()) << ' '
       << static_cast<int>(255.999 * scaled.y()) << ' '
       << static_cast<int>(255.999 * scaled.z()) << '\n';
