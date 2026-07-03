@@ -18,7 +18,7 @@ class camera {
 
       const auto viewport_height = 4.0;
       const auto viewport_width = viewport_height * (double(image_width_) / image_height_);
-      const auto focal_length = 2.5;
+      const auto focal_length = 5.5;
 
       center_ = vec3(0, 3, 0);
 

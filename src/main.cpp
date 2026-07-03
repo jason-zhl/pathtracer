@@ -11,7 +11,8 @@
 #include "world.h"
 
 int main() {
-    camera cam(800, 1.0, 2000);
+    // camera cam(800, 1.0, 2000);
+    camera cam(800, 1.0, 10);
     const auto ground_mat = make_shared<lambertian>(color(1.0, 1.0, 1.0));
     const auto sphere_mat_red = make_shared<plastic>(color(0.85, 0.15, 0.12), 0.12);
     const auto sphere_mat_green = make_shared<plastic>(color(0.314, 0.784, 0.12), 0.12);
@@ -23,9 +24,9 @@ int main() {
         vec3(100, 0, 0),
         vec3(0, 0, 100),
         ground_mat));
-    scene.add(make_shared<sphere>(vec3(0, 3, 7), 3, sphere_mat_red));
-    scene.add(make_shared<sphere>(vec3(-2, 0.5, 4), 0.5, sphere_mat_green));
-    const auto light_sphere = make_shared<sphere>(vec3(-20, 40, -5), 6, light_mat);
+    scene.add(make_shared<sphere>(vec3(0, 3, 15), 3, sphere_mat_red));
+    scene.add(make_shared<sphere>(vec3(-2, 0.5, 8), 0.5, sphere_mat_green));
+    const auto light_sphere = make_shared<sphere>(vec3(-20, 40, 0), 6, light_mat);
     scene.add(light_sphere);
     scene.add_area_light(light_sphere, light_mat);
     // scene.add(make_shared<sphere>(vec3(5, 3, 9), 3, sphere_mat_green));
