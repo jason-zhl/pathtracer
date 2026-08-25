@@ -113,7 +113,7 @@ class camera {
         L += Le;
       }
 
-      if (scene.has_ibl() && isect.mat != nullptr) {
+      if (isect.mat != nullptr) {
         vec3 wo_env;
         double pdf_env = 0.0;
         scene.sample_env(wo_env, pdf_env);
@@ -141,14 +141,10 @@ class camera {
         intersection bounce_isect;
         if (!scene.hit(scattered, &ray_t_, bounce_isect)) {
           const vec3 Le = scene.get_env(scattered.direction());
-          if (scene.has_ibl()) {
-            const double pdf_env = scene.ibl_pdf(scattered.direction());
-            const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
-            const double mis_w = mis_weight_power(pdf_mat, pdf_env);
-            L += mis_w * attenuation * Le;
-          } else {
-            L += attenuation * Le;
-          }
+          const double pdf_env = scene.env_pdf(scattered.direction());
+          const double pdf_mat = isect.mat->pdf(r, isect, scattered.direction());
+          const double mis_w = mis_weight_power(pdf_mat, pdf_env);
+          L += mis_w * attenuation * Le;
         } else {
           L += attenuation * ray_colour(scattered, max_depth - 1, scene, &isect, &r);
         }

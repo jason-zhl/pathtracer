@@ -3,10 +3,11 @@
 
 #include "geometry.h"
 #include "material/diffuse_light.h"
+#include "environment/environment.h"
+#include "environment/solid.h"
 #include <cmath>
 #include <utility>
 #include <vector>
-#include "IBL/ibl.h"
 
 /** β = 2 power heuristic (same as camera / Veach). */
 inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
@@ -19,7 +20,7 @@ inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
 
 class world {
   public:
-    world() = default;
+    world() : env_(std::make_unique<solid>(vec3(1.0, 1.0, 1.0))) {}
 
     void add(shared_ptr<geometry> object) { objects.push_back(object); }
 
@@ -61,32 +62,19 @@ class world {
       return hit_anything;
     }
 
-    void set_ibl(std::unique_ptr<ibl> env) { ibl_ = std::move(env); }
-
-    bool has_ibl() const { return ibl_ != nullptr; }
-
-    vec3 get_env(const vec3& direction) const {
-      if (ibl_) {
-        return ibl_->value(direction);
+    void set_environment(std::unique_ptr<environment> env) {
+      if (env) {
+        env_ = std::move(env);
       }
-      return vec3(1.0, 1.0, 1.0);
     }
+
+    vec3 get_env(const vec3& direction) const { return env_->value(direction); }
 
     void sample_env(vec3& out_direction, double& out_pdf) const {
-      if (ibl_) {
-        ibl_->sample_direction(out_direction, out_pdf);
-      } else {
-        out_pdf = 0.0;
-        out_direction = vec3(0, 1, 0);
-      }
+      env_->sample_direction(out_direction, out_pdf);
     }
 
-    double ibl_pdf(const vec3& direction) const {
-      if (ibl_) {
-        return ibl_->pdf(direction);
-      }
-      return 0.0;
-    }
+    double env_pdf(const vec3& direction) const { return env_->pdf(direction); }
 
     /**
      * One-sample area direct lighting: uniform light, uniform point (area pdf), shadow ray.
@@ -202,7 +190,7 @@ class world {
   private:
     std::vector<shared_ptr<geometry>> objects;
     std::vector<std::pair<shared_ptr<geometry>, shared_ptr<diffuse_light>>> area_lights_;
-    std::unique_ptr<ibl> ibl_;
+    std::unique_ptr<environment> env_;
 };
 
 #endif

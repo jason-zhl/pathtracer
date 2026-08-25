@@ -1,27 +1,27 @@
 #ifndef IBL_H
 #define IBL_H
 
-#include "../global.h"
+#include "environment.h"
 
 #include <string>
 #include <vector>
 
-class ibl {
+class ibl : public environment {
   public:
-    ibl(const std::string& file_name);
+    explicit ibl(const std::string& file_name);
     ibl(const ibl&) = delete;
     ibl& operator=(const ibl&) = delete;
     ibl(ibl&& other) noexcept;
     ibl& operator=(ibl&& other) noexcept;
-    ~ibl();
+    ~ibl() override;
 
-    vec3 value(const vec3& direction) const;
+    vec3 value(const vec3& direction) const override;
 
     /** Sample direction proportional to luminance × sin(θ) on the equirect grid; pdf w.r.t. solid angle. */
-    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle) const;
+    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle) const override;
 
     /** Pdf for discrete env sampling at the texel covering `direction` (consistent with sample_direction). */
-    double pdf(const vec3& direction) const;
+    double pdf(const vec3& direction) const override;
 
   private:
     float* texture_;

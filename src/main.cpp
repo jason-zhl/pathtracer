@@ -3,6 +3,8 @@
 #include <fstream>
 #include <memory>
 #include "camera.h"
+#include "environment/ibl.h"
+#include "environment/solid.h"
 #include "material/diffuse_light.h"
 #include "material/lambertian.h"
 #include "material/plastic.h"
@@ -19,6 +21,8 @@ int main() {
     const auto light_mat = make_shared<diffuse_light>(color(50.0, 50.0, 50.0));
 
     world scene;
+    // scene.set_environment(make_unique<ibl>("assets/studio_small_08_4k.hdr"));
+    // scene.set_environment(make_unique<solid>(vec3(0.7, 0.8, 1.0)));
     scene.add(make_shared<plane_patch>(
         vec3(-50, 0, -50),
         vec3(100, 0, 0),

@@ -1,4 +1,4 @@
-#include "IBL/ibl.h"
+#include "environment/ibl.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
@@ -62,7 +62,8 @@ double ibl::luminance_rgb(double r, double g, double b) {
   return 0.212671 * r + 0.71516 * g + 0.072169 * b;
 }
 
-ibl::ibl(const std::string& file_name) : texture_(nullptr), width_(0), height_(0), channels_(0) {
+ibl::ibl(const std::string& file_name)
+    : texture_(nullptr), width_(0), height_(0), channels_(0) {
   float* data = stbi_loadf(file_name.c_str(), &width_, &height_, &channels_, 3);
   if (!data) throw std::runtime_error(std::string("Failed to load IBL texture: ") + stbi_failure_reason());
   if (width_ < 1 || height_ < 1) {
