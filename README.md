@@ -45,9 +45,20 @@ Emissive geometry with next-event estimation, MIS against the glossy BSDF so dir
 
 ## Build & run
 
-```bash
-make
-./PathTracer.exe
+From the **Developer Command Prompt for VS** (or any shell where `cl` is on `PATH`):
+
+```cmd
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+build\Release\PathTracer.exe
 ```
 
-On Windows you can run `PathTracer.exe` from the project directory. The program writes `image.ppm` in the working directory.
+For a fast terminal build with Ninja:
+
+```cmd
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+build\PathTracer.exe
+```
+
+The program writes `image.ppm` in the working directory.
