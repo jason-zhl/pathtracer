@@ -11,7 +11,7 @@ enum class GeometryType {
 struct intersection {
   vec3 point;
   vec3 normal;
-  double t = 0;
+  float t = 0;
   int mat_id = -1;
   int geom_id = -1;
 };
@@ -21,29 +21,29 @@ struct Geometry {
   int mat_id = -1;
 
   vec3 center;
-  double radius = 0.0;
+  float radius = 0.0f;
 
   vec3 corner;
   vec3 u;
   vec3 v;
   vec3 n;
-  double n_len_sq = 0.0;
+  float n_len_sq = 0.0f;
 
-  static Geometry sphere(const vec3& center, double radius, int mat_id);
+  static Geometry sphere(const vec3& center, float radius, int mat_id);
   static Geometry plane_patch(const vec3& corner, const vec3& u, const vec3& v, int mat_id);
 
   HOST_DEVICE bool hit(const ray& r, const interval* t_range, intersection& isect) const;
   HOST_DEVICE vec3 normal(const vec3& point) const;
-  HOST_DEVICE bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const;
-  HOST_DEVICE double surface_area() const;
+  HOST_DEVICE bool sample_emitter_point(vec3& p, vec3& n, float& pdf_area, RNG& rng) const;
+  HOST_DEVICE float surface_area() const;
 };
 
-inline Geometry Geometry::sphere(const vec3& center, double radius, int mat_id) {
+inline Geometry Geometry::sphere(const vec3& center, float radius, int mat_id) {
   Geometry g;
   g.type = GeometryType::Sphere;
   g.mat_id = mat_id;
   g.center = center;
-  g.radius = fabs(radius);
+  g.radius = fabsf(radius);
   return g;
 }
 
@@ -83,7 +83,7 @@ HOST_DEVICE inline vec3 Geometry::normal(const vec3& point) const {
   return vec3();
 }
 
-HOST_DEVICE inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const {
+HOST_DEVICE inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, float& pdf_area, RNG& rng) const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_sample_emitter_point(*this, p, n, pdf_area, rng);
@@ -93,14 +93,14 @@ HOST_DEVICE inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double&
   return false;
 }
 
-HOST_DEVICE inline double Geometry::surface_area() const {
+HOST_DEVICE inline float Geometry::surface_area() const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_surface_area(*this);
     case GeometryType::PlanePatch:
       return plane_surface_area(*this);
   }
-  return 0.0;
+  return 0.0f;
 }
 
 #endif

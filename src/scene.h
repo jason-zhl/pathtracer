@@ -42,34 +42,34 @@ struct Scene {
     return env->value(direction);
 #endif
   }
-  HOST_DEVICE void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
+  HOST_DEVICE void sample_env(vec3& out_direction, float& out_pdf, RNG& rng) const {
 #ifdef __CUDA_ARCH__
     (void)rng;
-    out_pdf = 0.0;
+    out_pdf = 0.0f;
     out_direction = vec3(0, 1, 0);
 #else
     env->sample_direction(out_direction, out_pdf, rng);
 #endif
   }
-  HOST_DEVICE double env_pdf(const vec3& direction) const {
+  HOST_DEVICE float env_pdf(const vec3& direction) const {
 #ifdef __CUDA_ARCH__
     (void)direction;
-    return 0.0;
+    return 0.0f;
 #else
     return env->pdf(direction);
 #endif
   }
   HOST_DEVICE color area_light_nee(const ray& r_in, const intersection& isect,
     const vec3& n_shade, RNG& rng) const;
-  HOST_DEVICE double area_light_pdf_nee_at_receiver(const vec3& shading_point,
+  HOST_DEVICE float area_light_pdf_nee_at_receiver(const vec3& shading_point,
     const vec3& wo_toward_light, int light_geom_id, const vec3& light_point) const;
 };
 
-HOST_DEVICE inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
-  const double a = pdf_nee * pdf_nee;
-  const double b = pdf_mat * pdf_mat;
-  const double d = a + b;
-  return d > 0.0 ? a / d : 0.0;
+HOST_DEVICE inline float nee_mis_weight(float pdf_nee, float pdf_mat) {
+  const float a = pdf_nee * pdf_nee;
+  const float b = pdf_mat * pdf_mat;
+  const float d = a + b;
+  return d > 0.0f ? a / d : 0.0f;
 }
 
 HOST_DEVICE inline bool Scene::hit(const ray& r, const interval* t_range,
@@ -79,7 +79,7 @@ HOST_DEVICE inline bool Scene::hit(const ray& r, const interval* t_range,
   }
 
   intersection closest;
-  double closest_t = t_range->max;
+  float closest_t = t_range->max;
   bool hit_anything = false;
 
   for (int i = 0; i < n_geometries; ++i) {
@@ -106,7 +106,7 @@ HOST_DEVICE inline color Scene::area_light_nee(const ray& r_in, const intersecti
     return color(0, 0, 0);
   }
 
-  const int idx = static_cast<int>(rng.next() * static_cast<double>(n_area_lights));
+  const int idx = static_cast<int>(rng.next() * static_cast<float>(n_area_lights));
   const int pick = idx >= n_area_lights ? n_area_lights - 1 : idx;
   const int geom_id = area_lights[pick];
   if (!has_geometry(geom_id)) {
@@ -120,35 +120,35 @@ HOST_DEVICE inline color Scene::area_light_nee(const ray& r_in, const intersecti
 
   vec3 pL;
   vec3 nL;
-  double pdf_a = 0.0;
-  if (!geom.sample_emitter_point(pL, nL, pdf_a, rng) || pdf_a <= 0.0) {
+  float pdf_a = 0.0f;
+  if (!geom.sample_emitter_point(pL, nL, pdf_a, rng) || pdf_a <= 0.0f) {
     return color(0, 0, 0);
   }
 
   const vec3 d = pL - isect.point;
-  const double dist2 = d.length_squared();
-  if (dist2 < 1e-20) {
+  const float dist2 = d.length_squared();
+  if (dist2 < 1e-20f) {
     return color(0, 0, 0);
   }
-  const double dist = sqrt(dist2);
+  const float dist = sqrtf(dist2);
   const vec3 wo = d / dist;
 
-  const double cos_sh = dot(n_shade, wo);
-  if (cos_sh <= 0.0) {
+  const float cos_sh = dot(n_shade, wo);
+  if (cos_sh <= 0.0f) {
     return color(0, 0, 0);
   }
 
-  const double cos_light = dot(nL, -wo);
-  if (cos_light <= 0.0) {
+  const float cos_light = dot(nL, -wo);
+  if (cos_light <= 0.0f) {
     return color(0, 0, 0);
   }
 
-  const interval shadow_range(1e-3, dist - 1e-3);
+  const interval shadow_range(1e-3f, dist - 1e-3f);
   if (shadow_range.min >= shadow_range.max) {
     return color(0, 0, 0);
   }
 
-  const ray shadow_ray(isect.point + n_shade * 1e-3, wo);
+  const ray shadow_ray(isect.point + n_shade * 1e-3f, wo);
   intersection occ;
   if (hit(shadow_ray, &shadow_range, occ)) {
     return color(0, 0, 0);
@@ -164,18 +164,18 @@ HOST_DEVICE inline color Scene::area_light_nee(const ray& r_in, const intersecti
   const color Le = material(geom.mat_id).emitted(toward_light, light_isect);
   const color f = material(isect.mat_id).eval(r_in, isect, wo);
 
-  const double pdf_nee =
-    (pdf_a / static_cast<double>(n_area_lights)) * dist2 / fmax(cos_light, 1e-20);
-  const double pdf_mat = material(isect.mat_id).pdf(r_in, isect, wo);
-  const double mis_w = nee_mis_weight(pdf_nee, pdf_mat);
+  const float pdf_nee =
+    (pdf_a / static_cast<float>(n_area_lights)) * dist2 / fmaxf(cos_light, 1e-20f);
+  const float pdf_mat = material(isect.mat_id).pdf(r_in, isect, wo);
+  const float mis_w = nee_mis_weight(pdf_nee, pdf_mat);
 
-  return mis_w * f * Le * (cos_sh / fmax(pdf_nee, 1e-30));
+  return mis_w * f * Le * (cos_sh / fmaxf(pdf_nee, 1e-30f));
 }
 
-HOST_DEVICE inline double Scene::area_light_pdf_nee_at_receiver(const vec3& shading_point,
+HOST_DEVICE inline float Scene::area_light_pdf_nee_at_receiver(const vec3& shading_point,
   const vec3& wo_toward_light, int light_geom_id, const vec3& light_point) const {
   if (n_area_lights <= 0 || !has_geometry(light_geom_id)) {
-    return 0.0;
+    return 0.0f;
   }
   bool registered = false;
   for (int i = 0; i < n_area_lights; ++i) {
@@ -185,29 +185,29 @@ HOST_DEVICE inline double Scene::area_light_pdf_nee_at_receiver(const vec3& shad
     }
   }
   if (!registered) {
-    return 0.0;
+    return 0.0f;
   }
 
   const Geometry& light_geom = geometry(light_geom_id);
   const vec3 wo = unit_vector(wo_toward_light);
   const vec3 nL = unit_vector(light_geom.normal(light_point));
-  const double cos_light = dot(nL, -wo);
-  if (cos_light <= 1e-20) {
-    return 0.0;
+  const float cos_light = dot(nL, -wo);
+  if (cos_light <= 1e-20f) {
+    return 0.0f;
   }
 
   const vec3 delta = light_point - shading_point;
-  const double dist2 = delta.length_squared();
-  if (dist2 < 1e-20) {
-    return 0.0;
+  const float dist2 = delta.length_squared();
+  if (dist2 < 1e-20f) {
+    return 0.0f;
   }
 
-  const double A = light_geom.surface_area();
-  if (A <= 0.0) {
-    return 0.0;
+  const float A = light_geom.surface_area();
+  if (A <= 0.0f) {
+    return 0.0f;
   }
-  const double pdf_a = 1.0 / A;
-  return (pdf_a / static_cast<double>(n_area_lights)) * dist2 / cos_light;
+  const float pdf_a = 1.0f / A;
+  return (pdf_a / static_cast<float>(n_area_lights)) * dist2 / cos_light;
 }
 
 #endif

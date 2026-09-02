@@ -9,10 +9,10 @@ using std::shared_ptr;
 using std::make_unique;
 using std::unique_ptr;
 
-constexpr double INF = std::numeric_limits<double>::infinity();
-constexpr double PI = 3.14159265358979323846;
-constexpr double INV_PI = 1.0 / PI;
-constexpr double INV_2PI = 1.0 / (2.0 * PI);
+constexpr float INF = std::numeric_limits<float>::infinity();
+constexpr float PI = 3.14159265358979323846f;
+constexpr float INV_PI = 1.0f / PI;
+constexpr float INV_2PI = 1.0f / (2.0f * PI);
 
 #include "rng.h"
 

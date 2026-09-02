@@ -9,7 +9,7 @@
 
 namespace {
 
-__global__ void ray_colour_kernel(double* rgb, camera cam, Scene scene) {
+__global__ void ray_colour_kernel(float* rgb, camera cam, Scene scene) {
   const int x = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
   const int y = static_cast<int>(blockIdx.y * blockDim.y + threadIdx.y);
   const int width = cam.image_width();
@@ -22,11 +22,11 @@ __global__ void ray_colour_kernel(double* rgb, camera cam, Scene scene) {
   const int spp = cam.samples_per_pixel();
   for (int s = 0; s < spp; ++s) {
     RNG rng = make_rng(x, y, s);
-    const double u = rng.next(-0.5, 0.5);
-    const double v = rng.next(-0.5, 0.5);
+    const float u = rng.next(-0.5f, 0.5f);
+    const float v = rng.next(-0.5f, 0.5f);
     pixel += ray_colour(cam.primary_ray(x, y, u, v), cam, scene, rng);
   }
-  pixel /= static_cast<double>(spp);
+  pixel /= static_cast<float>(spp);
 
   const int idx = (y * width + x) * 3;
   rgb[idx + 0] = pixel.x();
@@ -38,7 +38,7 @@ struct DeviceScene {
   Geometry* geometries = nullptr;
   Material* materials = nullptr;
   int* area_lights = nullptr;
-  double* rgb = nullptr;
+  float* rgb = nullptr;
 
   void free_all() {
     cudaFree(geometries);
@@ -66,8 +66,8 @@ bool cuda_ray_colour(color* pixels, int64_t total_pixels, const camera& cam, con
     return false;
   }
 
-  static_assert(sizeof(color) == 3 * sizeof(double),
-                "color must be three doubles for CUDA memcpy");
+  static_assert(sizeof(color) == 3 * sizeof(float),
+                "color must be three floats for CUDA memcpy");
 
   DeviceScene device;
   Scene gpu_scene = scene;
@@ -113,7 +113,7 @@ bool cuda_ray_colour(color* pixels, int64_t total_pixels, const camera& cam, con
   gpu_scene.area_lights = device.area_lights;
 
   const std::size_t byte_count =
-      static_cast<std::size_t>(total_pixels) * 3 * sizeof(double);
+      static_cast<std::size_t>(total_pixels) * 3 * sizeof(float);
   CUDA_CHECK(cudaMalloc(&device.rgb, byte_count));
 
   const dim3 block(16, 16);

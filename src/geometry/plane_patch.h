@@ -6,22 +6,22 @@ HOST_DEVICE inline bool plane_hit(const Geometry& g, const ray& r, const interva
   if (t_range == nullptr) {
     return false;
   }
-  if (g.n_len_sq < 1e-30) {
+  if (g.n_len_sq < 1e-30f) {
     return false;
   }
-  double denom = dot(r.direction(), g.n);
-  if (fabs(denom) < 1e-12) {
+  float denom = dot(r.direction(), g.n);
+  if (fabsf(denom) < 1e-12f) {
     return false;
   }
-  double t = dot(g.corner - r.origin(), g.n) / denom;
+  float t = dot(g.corner - r.origin(), g.n) / denom;
   if (!t_range->surrounds(t)) {
     return false;
   }
   vec3 p = r.at(t);
   vec3 w = p - g.corner;
-  double s = dot(cross(w, g.v), g.n) / g.n_len_sq;
-  double tv = dot(cross(g.u, w), g.n) / g.n_len_sq;
-  if (s < 0.0 || s > 1.0 || tv < 0.0 || tv > 1.0) {
+  float s = dot(cross(w, g.v), g.n) / g.n_len_sq;
+  float tv = dot(cross(g.u, w), g.n) / g.n_len_sq;
+  if (s < 0.0f || s > 1.0f || tv < 0.0f || tv > 1.0f) {
     return false;
   }
   isect.point = p;
@@ -37,21 +37,21 @@ HOST_DEVICE inline vec3 plane_normal(const Geometry& g, const vec3& point) {
 }
 
 HOST_DEVICE inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n,
-  double& pdf_area, RNG& rng) {
-  const double su = rng.next();
-  const double sv = rng.next();
+  float& pdf_area, RNG& rng) {
+  const float su = rng.next();
+  const float sv = rng.next();
   p = g.corner + su * g.u + sv * g.v;
   n = unit_vector(g.n);
-  const double a = sqrt(g.n_len_sq);
-  if (a < 1e-30) {
+  const float a = sqrtf(g.n_len_sq);
+  if (a < 1e-30f) {
     return false;
   }
-  pdf_area = 1.0 / a;
+  pdf_area = 1.0f / a;
   return true;
 }
 
-HOST_DEVICE inline double plane_surface_area(const Geometry& g) {
-  return sqrt(g.n_len_sq);
+HOST_DEVICE inline float plane_surface_area(const Geometry& g) {
+  return sqrtf(g.n_len_sq);
 }
 
 #endif

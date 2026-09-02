@@ -12,13 +12,13 @@
 
 class camera {
   public:
-    camera(int image_width, double aspect_ratio, int samples_per_pixel = 10)
+    camera(int image_width, float aspect_ratio, int samples_per_pixel = 10)
       : image_width_(image_width), samples_per_pixel_(samples_per_pixel) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
 
-      const auto viewport_height = 4.0;
-      const auto viewport_width = viewport_height * (double(image_width_) / image_height_);
-      const auto focal_length = 5.5;
+      const auto viewport_height = 4.0f;
+      const auto viewport_width = viewport_height * (float(image_width_) / image_height_);
+      const auto focal_length = 5.5f;
 
       center_ = vec3(0, 3, 0);
 
@@ -30,12 +30,12 @@ class camera {
 
       const auto viewport_upper_left = center_ + vec3(0, 0, focal_length)
         - viewport_horizontal / 2 + viewport_vertical / 2;
-      pixel00_ = viewport_upper_left + 0.5 * (pixel_delta_horizontal_ + pixel_delta_vertical_);
+      pixel00_ = viewport_upper_left + 0.5f * (pixel_delta_horizontal_ + pixel_delta_vertical_);
     }
 
-    HOST_DEVICE ray primary_ray(int i, int j, double u, double v) const {
-      const vec3 pixel_center = pixel00_ + (static_cast<double>(i) * pixel_delta_horizontal_)
-        - (static_cast<double>(j) * pixel_delta_vertical_);
+    HOST_DEVICE ray primary_ray(int i, int j, float u, float v) const {
+      const vec3 pixel_center = pixel00_ + (static_cast<float>(i) * pixel_delta_horizontal_)
+        - (static_cast<float>(j) * pixel_delta_vertical_);
       const vec3 sample_point = pixel_center + u * pixel_delta_horizontal_
         - v * pixel_delta_vertical_;
       return ray(center_, sample_point - center_);
@@ -84,7 +84,7 @@ class camera {
     int image_height_ = 0;
     int samples_per_pixel_ = 50;
     int max_depth_ = 5;
-    const interval ray_t_{1e-3, INF};
+    const interval ray_t_{1e-3f, INF};
     vec3 center_;
     vec3 pixel00_;
     vec3 pixel_delta_horizontal_;
@@ -106,11 +106,11 @@ inline void camera::render_cpu(const World& world, color* pixels, int64_t total_
       color pixel_color(0, 0, 0);
       for (auto s{0}; s < samples_per_pixel_; s++) {
         RNG rng = make_rng(i, j, s);
-        const auto u = rng.next(-0.5, 0.5);
-        const auto v = rng.next(-0.5, 0.5);
+        const auto u = rng.next(-0.5f, 0.5f);
+        const auto v = rng.next(-0.5f, 0.5f);
         pixel_color += ray_colour(primary_ray(i, j, u, v), *this, scene, rng);
       }
-      pixel_color /= static_cast<double>(samples_per_pixel_);
+      pixel_color /= static_cast<float>(samples_per_pixel_);
       pixels[static_cast<int64_t>(j) * image_width_ + i] = pixel_color;
     }
 

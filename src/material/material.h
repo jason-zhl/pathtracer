@@ -14,13 +14,13 @@ enum class MaterialType {
 struct Material {
   MaterialType type = MaterialType::Lambertian;
   vec3 albedo;
-  double roughness = 0.0;
-  double alpha = 0.0;
-  double a2 = 0.0;
+  float roughness = 0.0f;
+  float alpha = 0.0f;
+  float a2 = 0.0f;
   vec3 emission;
 
   static Material lambertian(const vec3& albedo);
-  static Material plastic(const vec3& albedo, double roughness);
+  static Material plastic(const vec3& albedo, float roughness);
   static Material diffuse_light(const vec3& emit);
 
   HOST_DEVICE bool is_emissive() const { return type == MaterialType::DiffuseLight; }
@@ -28,7 +28,7 @@ struct Material {
   HOST_DEVICE bool scatter(const ray& r_in, const intersection& rec, color& attenuation,
     ray& scattered, RNG& rng) const;
   HOST_DEVICE color eval(const ray& r_in, const intersection& rec, const vec3& wo) const;
-  HOST_DEVICE double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const;
+  HOST_DEVICE float pdf(const ray& r_in, const intersection& rec, const vec3& wo) const;
   HOST_DEVICE color emitted(const ray& r_in, const intersection& rec) const;
 };
 
@@ -39,7 +39,7 @@ inline Material Material::lambertian(const vec3& albedo) {
   return m;
 }
 
-inline Material Material::plastic(const vec3& albedo, double roughness) {
+inline Material Material::plastic(const vec3& albedo, float roughness) {
   Material m;
   m.type = MaterialType::Plastic;
   m.albedo = albedo;
@@ -85,16 +85,16 @@ HOST_DEVICE inline color Material::eval(const ray& r_in, const intersection& rec
   return color(0, 0, 0);
 }
 
-HOST_DEVICE inline double Material::pdf(const ray& r_in, const intersection& rec, const vec3& wo) const {
+HOST_DEVICE inline float Material::pdf(const ray& r_in, const intersection& rec, const vec3& wo) const {
   switch (type) {
     case MaterialType::Lambertian:
       return lambertian_pdf(*this, r_in, rec, wo);
     case MaterialType::Plastic:
       return plastic_pdf(*this, r_in, rec, wo);
     case MaterialType::DiffuseLight:
-      return 0.0;
+      return 0.0f;
   }
-  return 0.0;
+  return 0.0f;
 }
 
 HOST_DEVICE inline color Material::emitted(const ray& r_in, const intersection& rec) const {

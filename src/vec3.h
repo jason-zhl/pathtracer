@@ -7,18 +7,18 @@
 
 class vec3 {
   public:
-    double e[3] = {0, 0, 0};
+    float e[3] = {0, 0, 0};
 
     HOST_DEVICE vec3() : e{0, 0, 0} {}
-    HOST_DEVICE vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
+    HOST_DEVICE vec3(float e0, float e1, float e2) : e{e0, e1, e2} {}
 
-    HOST_DEVICE double x() const { return e[0]; }
-    HOST_DEVICE double y() const { return e[1]; }
-    HOST_DEVICE double z() const { return e[2]; }
+    HOST_DEVICE float x() const { return e[0]; }
+    HOST_DEVICE float y() const { return e[1]; }
+    HOST_DEVICE float z() const { return e[2]; }
 
     HOST_DEVICE vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
-    HOST_DEVICE double operator[](int i) const { return e[i]; }
-    HOST_DEVICE double& operator[](int i) { return e[i]; }
+    HOST_DEVICE float operator[](int i) const { return e[i]; }
+    HOST_DEVICE float& operator[](int i) { return e[i]; }
 
     HOST_DEVICE vec3& operator+=(const vec3 &v) {
       e[0] += v.e[0];
@@ -27,7 +27,7 @@ class vec3 {
       return *this;
     }
 
-    HOST_DEVICE vec3& operator+=(double t) {
+    HOST_DEVICE vec3& operator+=(float t) {
       e[0] += t;
       e[1] += t;
       e[2] += t;
@@ -41,22 +41,22 @@ class vec3 {
       return *this;
     }
 
-    HOST_DEVICE vec3& operator*=(double t) {
+    HOST_DEVICE vec3& operator*=(float t) {
       e[0] *= t;
       e[1] *= t;
       e[2] *= t;
       return *this;
     }
 
-    HOST_DEVICE vec3& operator/=(double t) {
-      return *this *= 1/t;
+    HOST_DEVICE vec3& operator/=(float t) {
+      return *this *= 1.0f / t;
     }
 
-    HOST_DEVICE double length() const {
-      return sqrt(length_squared());
+    HOST_DEVICE float length() const {
+      return sqrtf(length_squared());
     }
 
-    HOST_DEVICE double length_squared() const {
+    HOST_DEVICE float length_squared() const {
       return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 };
@@ -70,11 +70,11 @@ HOST_DEVICE inline vec3 operator+(const vec3& u, const vec3& v) {
   return vec3(u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]);
 }
 
-HOST_DEVICE inline vec3 operator+(const vec3& v, double t) {
+HOST_DEVICE inline vec3 operator+(const vec3& v, float t) {
   return vec3(v.e[0] + t, v.e[1] + t, v.e[2] + t);
 }
 
-HOST_DEVICE inline vec3 operator+(double t, const vec3& v) {
+HOST_DEVICE inline vec3 operator+(float t, const vec3& v) {
   return v + t;
 }
 
@@ -86,23 +86,23 @@ HOST_DEVICE inline vec3 operator*(const vec3& u, const vec3& v) {
   return vec3(u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2]);
 }
 
-HOST_DEVICE inline vec3 operator*(double t, const vec3& v) {
+HOST_DEVICE inline vec3 operator*(float t, const vec3& v) {
   return vec3(t*v.e[0], t*v.e[1], t*v.e[2]);
 }
 
-HOST_DEVICE inline vec3 operator*(const vec3& v, double t) {
+HOST_DEVICE inline vec3 operator*(const vec3& v, float t) {
   return t * v;
 }
 
-HOST_DEVICE inline vec3 operator/(const vec3& v, double t) {
-  return (1/t) * v;
+HOST_DEVICE inline vec3 operator/(const vec3& v, float t) {
+  return (1.0f / t) * v;
 }
 
 HOST_DEVICE inline vec3 operator/(const vec3& u, const vec3& v) {
   return vec3(u.e[0] / v.e[0], u.e[1] / v.e[1], u.e[2] / v.e[2]);
 }
 
-HOST_DEVICE inline double dot(const vec3& u, const vec3& v) {
+HOST_DEVICE inline float dot(const vec3& u, const vec3& v) {
   return u.e[0] * v.e[0]
        + u.e[1] * v.e[1]
        + u.e[2] * v.e[2];
@@ -120,32 +120,32 @@ HOST_DEVICE inline vec3 unit_vector(const vec3& v) {
 
 // Branchless ONB method, by Duff et al.
 HOST_DEVICE inline void orthonormal_basis(const vec3& n, vec3& t, vec3& b) {
-  double sign = copysign(1.0, n.z());
-  const double a = -1.0 / (sign + n.z());
-  const double b_val = n.x() * n.y() * a;
-  t = vec3(1.0 + sign * n.x() * n.x() * a, sign * b_val, -sign * n.x());
+  float sign = copysignf(1.0f, n.z());
+  const float a = -1.0f / (sign + n.z());
+  const float b_val = n.x() * n.y() * a;
+  t = vec3(1.0f + sign * n.x() * n.x() * a, sign * b_val, -sign * n.x());
   b = vec3(sign * b_val, sign + n.y() * n.y() * a, -n.y());
 }
 
 HOST_DEVICE inline vec3 random_unit_vector(RNG& rng) {
   for (;;) {
-    vec3 p(rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0);
-    const double len2 = p.length_squared();
-    if (len2 <= 1.0 && len2 > 1e-20) {
-      return p / sqrt(len2);
+    vec3 p(rng.next() * 2.0f - 1.0f, rng.next() * 2.0f - 1.0f, rng.next() * 2.0f - 1.0f);
+    const float len2 = p.length_squared();
+    if (len2 <= 1.0f && len2 > 1e-20f) {
+      return p / sqrtf(len2);
     }
   }
 }
 
 // Cosine-weighted importance sampling for diffuse surfaces
 HOST_DEVICE inline vec3 lambertian_random(const vec3& n, RNG& rng) {
-  double u = rng.next();
-  double v = rng.next();
-  double phi = 2 * PI * u;
-  double r = sqrt(v);
-  double x = r * cos(phi);
-  double y = r * sin(phi);
-  double z = sqrt(1.0 - v);
+  float u = rng.next();
+  float v = rng.next();
+  float phi = 2.0f * PI * u;
+  float r = sqrtf(v);
+  float x = r * cosf(phi);
+  float y = r * sinf(phi);
+  float z = sqrtf(1.0f - v);
   vec3 t, b;
   orthonormal_basis(n, t, b);
   return t * x + b * y + n * z;

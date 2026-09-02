@@ -9,8 +9,8 @@
 #define HOST_DEVICE
 #endif
 
-HOST_DEVICE inline double clamp(double x, double lo, double hi) {
-  return fmin(hi, fmax(lo, x));
+HOST_DEVICE inline float clamp(float x, float lo, float hi) {
+  return fminf(hi, fmaxf(lo, x));
 }
 
 HOST_DEVICE inline int clamp(int x, int lo, int hi) {

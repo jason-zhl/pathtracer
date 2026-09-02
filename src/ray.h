@@ -12,7 +12,7 @@ class ray {
     HOST_DEVICE const vec3& origin() const { return origin_; }
     HOST_DEVICE const vec3& direction() const { return direction_; }
 
-    HOST_DEVICE vec3 at(double t) const {
+    HOST_DEVICE vec3 at(float t) const {
       return origin_ + t * direction_;
     }
 

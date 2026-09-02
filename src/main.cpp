@@ -9,13 +9,13 @@
 
 int main() {
     // camera cam(800, 1.0, 2000);
-    camera cam(800, 1.0, 10);
+    camera cam(800, 1.0f, 2000);
 
     World world;
-    const int ground_mat = world.add_material(Material::lambertian(color(1.0, 1.0, 1.0)));
-    const int sphere_mat_red = world.add_material(Material::plastic(color(0.85, 0.15, 0.12), 0.12));
-    const int sphere_mat_green = world.add_material(Material::plastic(color(0.314, 0.784, 0.12), 0.12));
-    const int light_mat = world.add_material(Material::diffuse_light(color(50.0, 50.0, 50.0)));
+    const int ground_mat = world.add_material(Material::lambertian(color(1.0f, 1.0f, 1.0f)));
+    const int sphere_mat_red = world.add_material(Material::plastic(color(0.85f, 0.15f, 0.12f), 0.12f));
+    const int sphere_mat_green = world.add_material(Material::plastic(color(0.314f, 0.784f, 0.12f), 0.12f));
+    const int light_mat = world.add_material(Material::diffuse_light(color(50.0f, 50.0f, 50.0f)));
 
     // world.set_environment(Environment::ibl("assets/studio_small_08_4k.hdr"));
     // world.set_environment(Environment::solid(vec3(0.7, 0.8, 1.0)));

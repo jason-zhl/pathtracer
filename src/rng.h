@@ -9,12 +9,12 @@ struct RNG {
   HOST_DEVICE RNG() : state(1) {}
   HOST_DEVICE explicit RNG(unsigned int s) : state(s == 0 ? 1u : s) {}
 
-  HOST_DEVICE double next() {
+  HOST_DEVICE float next() {
     state = state * 1664525u + 1013904223u;
-    return static_cast<double>(state >> 8) * (1.0 / 16777216.0);
+    return static_cast<float>(state >> 8) * (1.0f / 16777216.0f);
   }
 
-  HOST_DEVICE double next(double lo, double hi) {
+  HOST_DEVICE float next(float lo, float hi) {
     return lo + (hi - lo) * next();
   }
 };

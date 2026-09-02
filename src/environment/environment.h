@@ -18,17 +18,17 @@ struct Environment {
   std::vector<float> texture;
   int width = 0;
   int height = 0;
-  std::vector<double> marginal_cdf;
-  std::vector<double> cond_cdf;
-  std::vector<double> pixel_weights;
-  double total_weight = 0.0;
+  std::vector<float> marginal_cdf;
+  std::vector<float> cond_cdf;
+  std::vector<float> pixel_weights;
+  float total_weight = 0.0f;
 
   static Environment solid(const vec3& colour);
   static Environment ibl(const std::string& file_name);
 
   HOST_DEVICE vec3 value(const vec3& direction) const;
-  HOST_DEVICE void sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const;
-  HOST_DEVICE double pdf(const vec3& direction) const;
+  HOST_DEVICE void sample_direction(vec3& out_direction, float& out_pdf_solid_angle, RNG& rng) const;
+  HOST_DEVICE float pdf(const vec3& direction) const;
 };
 
 inline Environment Environment::solid(const vec3& colour) {
@@ -56,7 +56,7 @@ HOST_DEVICE inline vec3 Environment::value(const vec3& direction) const {
 #endif
 }
 
-HOST_DEVICE inline void Environment::sample_direction(vec3& out_direction, double& out_pdf_solid_angle,
+HOST_DEVICE inline void Environment::sample_direction(vec3& out_direction, float& out_pdf_solid_angle,
   RNG& rng) const {
 #ifdef __CUDA_ARCH__
   solid_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
@@ -69,12 +69,12 @@ HOST_DEVICE inline void Environment::sample_direction(vec3& out_direction, doubl
       ibl_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
       return;
   }
-  out_pdf_solid_angle = 0.0;
+  out_pdf_solid_angle = 0.0f;
   out_direction = vec3(0, 1, 0);
 #endif
 }
 
-HOST_DEVICE inline double Environment::pdf(const vec3& direction) const {
+HOST_DEVICE inline float Environment::pdf(const vec3& direction) const {
 #ifdef __CUDA_ARCH__
   return solid_pdf(*this, direction);
 #else
@@ -84,7 +84,7 @@ HOST_DEVICE inline double Environment::pdf(const vec3& direction) const {
     case EnvType::IBL:
       return ibl_pdf(*this, direction);
   }
-  return 0.0;
+  return 0.0f;
 #endif
 }
 

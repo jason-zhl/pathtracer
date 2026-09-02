@@ -7,7 +7,7 @@
 
 class World {
   public:
-    World() : env_(Environment::solid(vec3(1.0, 1.0, 1.0))) {}
+    World() : env_(Environment::solid(vec3(1.0f, 1.0f, 1.0f))) {}
 
     int add_material(const Material& mat) {
       materials_.push_back(mat);
@@ -29,7 +29,7 @@ class World {
       geometries_.clear();
       area_lights_.clear();
       materials_.clear();
-      env_ = Environment::solid(vec3(1.0, 1.0, 1.0));
+      env_ = Environment::solid(vec3(1.0f, 1.0f, 1.0f));
     }
 
     void set_environment(Environment env) { env_ = std::move(env); }
