@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-inline bool sphere_hit(const Geometry& g, const ray& r, const interval* t_range,
+HOST_DEVICE inline bool sphere_hit(const Geometry& g, const ray& r, const interval* t_range,
   intersection& isect) {
   if (t_range == nullptr) {
     return false;
@@ -31,19 +31,19 @@ inline bool sphere_hit(const Geometry& g, const ray& r, const interval* t_range,
   return true;
 }
 
-inline vec3 sphere_normal(const Geometry& g, const vec3& point) {
+HOST_DEVICE inline vec3 sphere_normal(const Geometry& g, const vec3& point) {
   return point - g.center;
 }
 
-inline bool sphere_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area,
-  RNG& rng) {
+HOST_DEVICE inline bool sphere_sample_emitter_point(const Geometry& g, vec3& p, vec3& n,
+  double& pdf_area, RNG& rng) {
   n = random_unit_vector(rng);
   p = g.center + g.radius * n;
   pdf_area = 1.0 / (4.0 * PI * g.radius * g.radius);
   return true;
 }
 
-inline double sphere_surface_area(const Geometry& g) {
+HOST_DEVICE inline double sphere_surface_area(const Geometry& g) {
   return 4.0 * PI * g.radius * g.radius;
 }
 

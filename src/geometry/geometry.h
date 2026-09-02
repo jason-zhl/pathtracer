@@ -32,10 +32,10 @@ struct Geometry {
   static Geometry sphere(const vec3& center, double radius, int mat_id);
   static Geometry plane_patch(const vec3& corner, const vec3& u, const vec3& v, int mat_id);
 
-  bool hit(const ray& r, const interval* t_range, intersection& isect) const;
-  vec3 normal(const vec3& point) const;
-  bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const;
-  double surface_area() const;
+  HOST_DEVICE bool hit(const ray& r, const interval* t_range, intersection& isect) const;
+  HOST_DEVICE vec3 normal(const vec3& point) const;
+  HOST_DEVICE bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const;
+  HOST_DEVICE double surface_area() const;
 };
 
 inline Geometry Geometry::sphere(const vec3& center, double radius, int mat_id) {
@@ -63,7 +63,7 @@ inline Geometry Geometry::plane_patch(const vec3& corner, const vec3& u, const v
 #include "sphere.h"
 #include "plane_patch.h"
 
-inline bool Geometry::hit(const ray& r, const interval* t_range, intersection& isect) const {
+HOST_DEVICE inline bool Geometry::hit(const ray& r, const interval* t_range, intersection& isect) const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_hit(*this, r, t_range, isect);
@@ -73,7 +73,7 @@ inline bool Geometry::hit(const ray& r, const interval* t_range, intersection& i
   return false;
 }
 
-inline vec3 Geometry::normal(const vec3& point) const {
+HOST_DEVICE inline vec3 Geometry::normal(const vec3& point) const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_normal(*this, point);
@@ -83,7 +83,7 @@ inline vec3 Geometry::normal(const vec3& point) const {
   return vec3();
 }
 
-inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const {
+HOST_DEVICE inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_sample_emitter_point(*this, p, n, pdf_area, rng);
@@ -93,7 +93,7 @@ inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area, R
   return false;
 }
 
-inline double Geometry::surface_area() const {
+HOST_DEVICE inline double Geometry::surface_area() const {
   switch (type) {
     case GeometryType::Sphere:
       return sphere_surface_area(*this);

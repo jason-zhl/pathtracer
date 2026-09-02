@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-inline bool plane_hit(const Geometry& g, const ray& r, const interval* t_range,
+HOST_DEVICE inline bool plane_hit(const Geometry& g, const ray& r, const interval* t_range,
   intersection& isect) {
   if (t_range == nullptr) {
     return false;
@@ -33,13 +33,13 @@ inline bool plane_hit(const Geometry& g, const ray& r, const interval* t_range,
   return true;
 }
 
-inline vec3 plane_normal(const Geometry& g, const vec3& point) {
+HOST_DEVICE inline vec3 plane_normal(const Geometry& g, const vec3& point) {
   (void)point;
   return g.n;
 }
 
-inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area,
-  RNG& rng) {
+HOST_DEVICE inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n,
+  double& pdf_area, RNG& rng) {
   const double su = rng.next();
   const double sv = rng.next();
   p = g.corner + su * g.u + sv * g.v;
@@ -52,7 +52,7 @@ inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, doub
   return true;
 }
 
-inline double plane_surface_area(const Geometry& g) {
+HOST_DEVICE inline double plane_surface_area(const Geometry& g) {
   return std::sqrt(g.n_len_sq);
 }
 

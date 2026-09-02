@@ -14,22 +14,22 @@ constexpr double k_plastic_n_diff = 0.3;
 constexpr double k_plastic_n_spec = 0.7;
 constexpr double k_plastic_n_sum = k_plastic_n_diff + k_plastic_n_spec;
 
-inline double plastic_pdf_diffuse(double ndotwo) { return ndotwo / PI; }
+HOST_DEVICE inline double plastic_pdf_diffuse(double ndotwo) { return ndotwo / PI; }
 
-inline double plastic_ggx(const Material& mat, const vec3& h, const vec3& n) {
+HOST_DEVICE inline double plastic_ggx(const Material& mat, const vec3& h, const vec3& n) {
   const double c2 = std::pow(dot(h, n), 2);
   const double d = (c2 * (mat.a2 - 1.0) + 1.0);
   return mat.a2 / (PI * d * d);
 }
 
-inline double plastic_fresnel(double cos_theta) {
+HOST_DEVICE inline double plastic_fresnel(double cos_theta) {
   cos_theta = std::clamp(cos_theta, -1.0, 1.0);
   const double t = 1.0 - std::fabs(cos_theta);
   return k_plastic_dielectric_f0
     + (1.0 - k_plastic_dielectric_f0) * (t * t * t * t * t);
 }
 
-inline double plastic_smith_g1(const Material& mat, const vec3& v, const vec3& n) {
+HOST_DEVICE inline double plastic_smith_g1(const Material& mat, const vec3& v, const vec3& n) {
   const double ndotv = dot(n, v);
   if (ndotv <= 0.0) {
     return 0.0;
@@ -37,11 +37,11 @@ inline double plastic_smith_g1(const Material& mat, const vec3& v, const vec3& n
   return 2.0 * ndotv / (ndotv + std::sqrt(mat.a2 + (1.0 - mat.a2) * ndotv * ndotv));
 }
 
-inline vec3 plastic_reflect(const vec3& wi, const vec3& m) {
+HOST_DEVICE inline vec3 plastic_reflect(const vec3& wi, const vec3& m) {
   return 2.0 * dot(wi, m) * m - wi;
 }
 
-inline vec3 plastic_sample_ggx(const Material& mat, const vec3& n, RNG& rng) {
+HOST_DEVICE inline vec3 plastic_sample_ggx(const Material& mat, const vec3& n, RNG& rng) {
   const double xi1 = rng.next();
   const double xi2 = rng.next();
   const double cos_theta =
@@ -55,7 +55,7 @@ inline vec3 plastic_sample_ggx(const Material& mat, const vec3& n, RNG& rng) {
   return unit_vector(t * (sin_theta * cos_p) + b * (sin_theta * sin_p) + n * cos_theta);
 }
 
-inline double plastic_pdf_specular(const Material& mat, const vec3& wi, const vec3& wo,
+HOST_DEVICE inline double plastic_pdf_specular(const Material& mat, const vec3& wi, const vec3& wo,
   const vec3& n) {
   const double ndotwo = dot(n, wo);
   if (ndotwo <= 0.0) {
@@ -71,7 +71,7 @@ inline double plastic_pdf_specular(const Material& mat, const vec3& wi, const ve
   return (D * ndoth) / (4.0 * std::abs(wih));
 }
 
-inline color plastic_eval_brdf(const Material& mat, const vec3& wi, const vec3& wo,
+HOST_DEVICE inline color plastic_eval_brdf(const Material& mat, const vec3& wi, const vec3& wo,
   const vec3& n, double cos_i) {
   const color f_diff = mat.albedo / PI;
   const double ndotwo = dot(n, wo);
@@ -92,7 +92,7 @@ inline color plastic_eval_brdf(const Material& mat, const vec3& wi, const vec3& 
 
 }  // namespace
 
-inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersection& rec,
   color& attenuation, ray& scattered, RNG& rng) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
@@ -151,7 +151,7 @@ inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersec
   return true;
 }
 
-inline color plastic_eval(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline color plastic_eval(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
@@ -163,7 +163,7 @@ inline color plastic_eval(const Material& mat, const ray& r_in, const intersecti
   return plastic_eval_brdf(mat, wi, wou, n, cos_i);
 }
 
-inline double plastic_pdf(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline double plastic_pdf(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {

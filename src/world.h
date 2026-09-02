@@ -9,7 +9,7 @@
 #include <vector>
 
 /** β = 2 power heuristic (same as camera / Veach). */
-inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
+HOST_DEVICE inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
   constexpr double beta = 2.0;
   const double a = std::pow(pdf_nee, beta);
   const double b = std::pow(pdf_mat, beta);
@@ -26,11 +26,11 @@ class world {
       return static_cast<int>(materials_.size()) - 1;
     }
 
-    bool has_material(int id) const {
+    HOST_DEVICE bool has_material(int id) const {
       return id >= 0 && static_cast<std::size_t>(id) < materials_.size();
     }
 
-    const Material& material(int id) const {
+    HOST_DEVICE const Material& material(int id) const {
       return materials_.at(static_cast<std::size_t>(id));
     }
 
@@ -39,11 +39,11 @@ class world {
       return static_cast<int>(geometries_.size()) - 1;
     }
 
-    bool has_geometry(int id) const {
+    HOST_DEVICE bool has_geometry(int id) const {
       return id >= 0 && static_cast<std::size_t>(id) < geometries_.size();
     }
 
-    const Geometry& geometry(int id) const {
+    HOST_DEVICE const Geometry& geometry(int id) const {
       return geometries_.at(static_cast<std::size_t>(id));
     }
 
@@ -54,7 +54,7 @@ class world {
       }
     }
 
-    bool has_area_lights() const { return !area_lights_.empty(); }
+    HOST_DEVICE bool has_area_lights() const { return !area_lights_.empty(); }
 
     const std::vector<Geometry>& geometries() const { return geometries_; }
     const std::vector<int>& area_light_ids() const { return area_lights_; }
@@ -66,7 +66,7 @@ class world {
       env_ = Environment::solid(vec3(1.0, 1.0, 1.0));
     }
 
-    bool hit(const ray& r, const interval* t_range, intersection& isect) const {
+    HOST_DEVICE bool hit(const ray& r, const interval* t_range, intersection& isect) const {
       if (t_range == nullptr) {
         return false;
       }
@@ -95,19 +95,19 @@ class world {
 
     void set_environment(Environment env) { env_ = std::move(env); }
 
-    vec3 get_env(const vec3& direction) const { return env_.value(direction); }
+    HOST_DEVICE vec3 get_env(const vec3& direction) const { return env_.value(direction); }
 
-    void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
+    HOST_DEVICE void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
       env_.sample_direction(out_direction, out_pdf, rng);
     }
 
-    double env_pdf(const vec3& direction) const { return env_.pdf(direction); }
+    HOST_DEVICE double env_pdf(const vec3& direction) const { return env_.pdf(direction); }
 
     /**
      * One-sample area direct lighting: uniform light, uniform point (area pdf), shadow ray.
      * MIS (power, β=2) vs mixture BSDF pdf at ω toward the sample reduces glossy double-count / spikes.
      */
-    color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade,
+    HOST_DEVICE color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade,
       RNG& rng) const {
       if (area_lights_.empty() || !has_material(isect.mat_id)) {
         return color(0, 0, 0);
@@ -184,7 +184,7 @@ class world {
      * Solid-angle pdf at `shading_point` for “uniform light + uniform area point” (same Jacobian as NEE),
      * when the path direction `wo` hits `light_geom_id` at `light_point`. Zero if not a registered area light.
      */
-    double area_light_pdf_nee_at_receiver(const vec3& shading_point, const vec3& wo_toward_light,
+    HOST_DEVICE double area_light_pdf_nee_at_receiver(const vec3& shading_point, const vec3& wo_toward_light,
       int light_geom_id, const vec3& light_point) const {
       if (area_lights_.empty() || !has_geometry(light_geom_id)) {
         return 0.0;

@@ -23,13 +23,13 @@ struct Material {
   static Material plastic(const vec3& albedo, double roughness);
   static Material diffuse_light(const vec3& emit);
 
-  bool is_emissive() const { return type == MaterialType::DiffuseLight; }
+  HOST_DEVICE bool is_emissive() const { return type == MaterialType::DiffuseLight; }
 
-  bool scatter(const ray& r_in, const intersection& rec, color& attenuation,
+  HOST_DEVICE bool scatter(const ray& r_in, const intersection& rec, color& attenuation,
     ray& scattered, RNG& rng) const;
-  color eval(const ray& r_in, const intersection& rec, const vec3& wo) const;
-  double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const;
-  color emitted(const ray& r_in, const intersection& rec) const;
+  HOST_DEVICE color eval(const ray& r_in, const intersection& rec, const vec3& wo) const;
+  HOST_DEVICE double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const;
+  HOST_DEVICE color emitted(const ray& r_in, const intersection& rec) const;
 };
 
 inline Material Material::lambertian(const vec3& albedo) {
@@ -60,7 +60,7 @@ inline Material Material::diffuse_light(const vec3& emit) {
 #include "plastic.h"
 #include "diffuse_light.h"
 
-inline bool Material::scatter(const ray& r_in, const intersection& rec, color& attenuation,
+HOST_DEVICE inline bool Material::scatter(const ray& r_in, const intersection& rec, color& attenuation,
   ray& scattered, RNG& rng) const {
   switch (type) {
     case MaterialType::Lambertian:
@@ -73,7 +73,7 @@ inline bool Material::scatter(const ray& r_in, const intersection& rec, color& a
   return false;
 }
 
-inline color Material::eval(const ray& r_in, const intersection& rec, const vec3& wo) const {
+HOST_DEVICE inline color Material::eval(const ray& r_in, const intersection& rec, const vec3& wo) const {
   switch (type) {
     case MaterialType::Lambertian:
       return lambertian_eval(*this, r_in, rec, wo);
@@ -85,7 +85,7 @@ inline color Material::eval(const ray& r_in, const intersection& rec, const vec3
   return color(0, 0, 0);
 }
 
-inline double Material::pdf(const ray& r_in, const intersection& rec, const vec3& wo) const {
+HOST_DEVICE inline double Material::pdf(const ray& r_in, const intersection& rec, const vec3& wo) const {
   switch (type) {
     case MaterialType::Lambertian:
       return lambertian_pdf(*this, r_in, rec, wo);
@@ -97,7 +97,7 @@ inline double Material::pdf(const ray& r_in, const intersection& rec, const vec3
   return 0.0;
 }
 
-inline color Material::emitted(const ray& r_in, const intersection& rec) const {
+HOST_DEVICE inline color Material::emitted(const ray& r_in, const intersection& rec) const {
   if (type != MaterialType::DiffuseLight) {
     return color(0, 0, 0);
   }

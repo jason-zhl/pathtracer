@@ -1,7 +1,7 @@
 #ifndef DIFFUSE_LIGHT_H
 #define DIFFUSE_LIGHT_H
 
-inline bool diffuse_light_scatter(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline bool diffuse_light_scatter(const Material& mat, const ray& r_in, const intersection& rec,
   color& attenuation, ray& scattered, RNG& rng) {
   (void)mat;
   (void)r_in;
@@ -12,7 +12,7 @@ inline bool diffuse_light_scatter(const Material& mat, const ray& r_in, const in
   return false;
 }
 
-inline color diffuse_light_emitted(const Material& mat, const ray& r_in, const intersection& rec) {
+HOST_DEVICE inline color diffuse_light_emitted(const Material& mat, const ray& r_in, const intersection& rec) {
   const vec3 gn = unit_vector(rec.normal);
   if (dot(r_in.direction(), gn) < 0.0) {
     return mat.emission;

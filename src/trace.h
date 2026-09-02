@@ -10,7 +10,7 @@
 #endif
 
 /** Power heuristic MIS weight for strategy with pdf_self vs the other; β = 2 (Veach). */
-inline double mis_weight_power(double pdf_self, double pdf_other) {
+HOST_DEVICE inline double mis_weight_power(double pdf_self, double pdf_other) {
   constexpr double beta = 2.0;
   const double a = std::pow(pdf_self, beta);
   const double b = std::pow(pdf_other, beta);
@@ -18,7 +18,7 @@ inline double mis_weight_power(double pdf_self, double pdf_other) {
   return denom > 0.0 ? a / denom : 0.0;
 }
 
-inline color ray_colour(const ray& r, const camera& cam, const world& scene, RNG& rng) {
+HOST_DEVICE inline color ray_colour(const ray& r, const camera& cam, const world& scene, RNG& rng) {
   color L(0, 0, 0);
   color throughput(1, 1, 1);
   ray curr_ray = r;

@@ -41,11 +41,11 @@ class camera {
       return ray(center_, sample_point - center_);
     }
 
-    int image_width() const { return image_width_; }
-    int image_height() const { return image_height_; }
-    int samples_per_pixel() const { return samples_per_pixel_; }
-    int max_depth() const { return max_depth_; }
-    const interval& ray_t() const { return ray_t_; }
+    HOST_DEVICE int image_width() const { return image_width_; }
+    HOST_DEVICE int image_height() const { return image_height_; }
+    HOST_DEVICE int samples_per_pixel() const { return samples_per_pixel_; }
+    HOST_DEVICE int max_depth() const { return max_depth_; }
+    HOST_DEVICE const interval& ray_t() const { return ray_t_; }
 
     void render(const world& scene, std::ofstream* out) const {
       if (out == nullptr) {

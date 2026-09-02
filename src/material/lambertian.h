@@ -1,7 +1,7 @@
 #ifndef LAMBERTIAN_H
 #define LAMBERTIAN_H
 
-inline bool lambertian_scatter(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline bool lambertian_scatter(const Material& mat, const ray& r_in, const intersection& rec,
   color& attenuation, ray& scattered, RNG& rng) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
@@ -14,7 +14,7 @@ inline bool lambertian_scatter(const Material& mat, const ray& r_in, const inter
   return true;
 }
 
-inline color lambertian_eval(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline color lambertian_eval(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
@@ -27,7 +27,7 @@ inline color lambertian_eval(const Material& mat, const ray& r_in, const interse
   return mat.albedo / PI;
 }
 
-inline double lambertian_pdf(const Material& mat, const ray& r_in, const intersection& rec,
+HOST_DEVICE inline double lambertian_pdf(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
   (void)mat;
   vec3 n = unit_vector(rec.normal);
