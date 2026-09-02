@@ -12,31 +12,39 @@
 
 class camera {
   public:
-    camera(int image_width, float aspect_ratio, int samples_per_pixel = 10,
-           float focus_dist = 5.5f, float aperture_radius = 0.0f)
+    camera(int image_width, float aspect_ratio, int samples_per_pixel,
+           const vec3& look_from, const vec3& look_at, const vec3& up,
+           float vfov_degrees, float focus_dist = 5.5f, float aperture_radius = 0.0f)
       : image_width_(image_width), samples_per_pixel_(samples_per_pixel),
         aperture_radius_(aperture_radius) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
+      if (image_height_ < 1) {
+        image_height_ = 1;
+      }
 
-      const auto viewport_height = 4.0f;
-      const auto viewport_width = viewport_height * (float(image_width_) / image_height_);
-      const auto focal_length = 5.5f;
-      const auto focus_scale = focus_dist / focal_length;
+      center_ = look_from;
 
-      center_ = vec3(0, 3, 0);
+      const float theta = vfov_degrees * (PI / 180.0f);
+      const float viewport_height = 2.0f * tanf(theta * 0.5f) * focus_dist;
+      const float viewport_width = viewport_height
+        * (static_cast<float>(image_width_) / static_cast<float>(image_height_));
 
-      const auto viewport_horizontal = vec3(viewport_width * focus_scale, 0, 0);
-      const auto viewport_vertical = vec3(0, viewport_height * focus_scale, 0);
+      const vec3 w = unit_vector(look_at - look_from);
+      const vec3 u = unit_vector(cross(up, w));
+      const vec3 v = cross(w, u);
 
-      pixel_delta_horizontal_ = viewport_horizontal / image_width_;
-      pixel_delta_vertical_ = viewport_vertical / image_height_;
+      const vec3 viewport_horizontal = viewport_width * u;
+      const vec3 viewport_vertical = viewport_height * v;
 
-      const auto viewport_upper_left = center_ + vec3(0, 0, focus_dist)
-        - viewport_horizontal / 2 + viewport_vertical / 2;
+      pixel_delta_horizontal_ = viewport_horizontal / static_cast<float>(image_width_);
+      pixel_delta_vertical_ = viewport_vertical / static_cast<float>(image_height_);
+
+      const vec3 viewport_upper_left = center_ + w * focus_dist
+        - viewport_horizontal * 0.5f + viewport_vertical * 0.5f;
       pixel00_ = viewport_upper_left + 0.5f * (pixel_delta_horizontal_ + pixel_delta_vertical_);
 
-      defocus_disk_u_ = vec3(aperture_radius_, 0, 0);
-      defocus_disk_v_ = vec3(0, aperture_radius_, 0);
+      defocus_disk_u_ = aperture_radius_ * u;
+      defocus_disk_v_ = aperture_radius_ * v;
     }
 
     HOST_DEVICE ray primary_ray(int i, int j, RNG& rng) const {

@@ -8,8 +8,14 @@
 #include "world.h"
 
 int main() {
-    // camera cam(800, 1.0, 2000);
-    camera cam(800, 1.0f, 2000, 15.0f, 0.25f);
+    camera cam(
+        800, 1.0f, 2000,
+        vec3(0.0f, 3.0f, 0.0f),
+        vec3(0.0f, 3.0f, 15.0f),
+        vec3(0.0f, 1.0f, 0.0f),
+        40.0f,
+        15.0f,
+        0.25f);
 
     World world;
     const int ground_mat = world.add_material(Material::lambertian(color(1.0f, 1.0f, 1.0f)));
