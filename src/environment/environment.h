@@ -1,21 +1,78 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include "../global.h"
+#include "global.h"
 
-/** Infinite environment / background: radiance lookup and optional importance sampling. */
-class environment {
-  public:
-    virtual ~environment() = default;
+#include <string>
+#include <vector>
 
-    virtual vec3 value(const vec3& direction) const = 0;
-
-    /** Sample a direction; pdf w.r.t. solid angle. May set pdf to 0 if sampling is unsupported. */
-    virtual void sample_direction(vec3& out_direction, double& out_pdf_solid_angle,
-      RNG& rng) const = 0;
-
-    /** Pdf for env sampling at `direction` (consistent with sample_direction). */
-    virtual double pdf(const vec3& direction) const = 0;
+enum class EnvType {
+  Solid,
+  IBL
 };
+
+struct Environment {
+  EnvType type = EnvType::Solid;
+  vec3 colour;
+
+  std::vector<float> texture;
+  int width = 0;
+  int height = 0;
+  std::vector<double> marginal_cdf;
+  std::vector<double> cond_cdf;
+  std::vector<double> pixel_weights;
+  double total_weight = 0.0;
+
+  static Environment solid(const vec3& colour);
+  static Environment ibl(const std::string& file_name);
+
+  vec3 value(const vec3& direction) const;
+  void sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const;
+  double pdf(const vec3& direction) const;
+};
+
+inline Environment Environment::solid(const vec3& colour) {
+  Environment env;
+  env.type = EnvType::Solid;
+  env.colour = colour;
+  return env;
+}
+
+#include "solid.h"
+#include "ibl.h"
+
+inline vec3 Environment::value(const vec3& direction) const {
+  switch (type) {
+    case EnvType::Solid:
+      return solid_value(*this, direction);
+    case EnvType::IBL:
+      return ibl_value(*this, direction);
+  }
+  return vec3();
+}
+
+inline void Environment::sample_direction(vec3& out_direction, double& out_pdf_solid_angle,
+  RNG& rng) const {
+  switch (type) {
+    case EnvType::Solid:
+      solid_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
+      return;
+    case EnvType::IBL:
+      ibl_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
+      return;
+  }
+  out_pdf_solid_angle = 0.0;
+  out_direction = vec3(0, 1, 0);
+}
+
+inline double Environment::pdf(const vec3& direction) const {
+  switch (type) {
+    case EnvType::Solid:
+      return solid_pdf(*this, direction);
+    case EnvType::IBL:
+      return ibl_pdf(*this, direction);
+  }
+  return 0.0;
+}
 
 #endif

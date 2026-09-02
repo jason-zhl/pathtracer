@@ -2,7 +2,6 @@
 #define WORLD_H
 
 #include "environment/environment.h"
-#include "environment/solid.h"
 #include "geometry/geometry.h"
 #include "material/material.h"
 #include <cmath>
@@ -20,7 +19,7 @@ inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
 
 class world {
   public:
-    world() : env_(std::make_unique<solid>(vec3(1.0, 1.0, 1.0))) {}
+    world() : env_(Environment::solid(vec3(1.0, 1.0, 1.0))) {}
 
     int add_material(const Material& mat) {
       materials_.push_back(mat);
@@ -64,6 +63,7 @@ class world {
       geometries_.clear();
       area_lights_.clear();
       materials_.clear();
+      env_ = Environment::solid(vec3(1.0, 1.0, 1.0));
     }
 
     bool hit(const ray& r, const interval* t_range, intersection& isect) const {
@@ -93,19 +93,15 @@ class world {
       return hit_anything;
     }
 
-    void set_environment(std::unique_ptr<environment> env) {
-      if (env) {
-        env_ = std::move(env);
-      }
-    }
+    void set_environment(Environment env) { env_ = std::move(env); }
 
-    vec3 get_env(const vec3& direction) const { return env_->value(direction); }
+    vec3 get_env(const vec3& direction) const { return env_.value(direction); }
 
     void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
-      env_->sample_direction(out_direction, out_pdf, rng);
+      env_.sample_direction(out_direction, out_pdf, rng);
     }
 
-    double env_pdf(const vec3& direction) const { return env_->pdf(direction); }
+    double env_pdf(const vec3& direction) const { return env_.pdf(direction); }
 
     /**
      * One-sample area direct lighting: uniform light, uniform point (area pdf), shadow ray.
@@ -231,7 +227,7 @@ class world {
     std::vector<Geometry> geometries_;
     std::vector<int> area_lights_;
     std::vector<Material> materials_;
-    std::unique_ptr<environment> env_;
+    Environment env_;
 };
 
 #endif

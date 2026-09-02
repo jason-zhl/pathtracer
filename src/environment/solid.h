@@ -1,25 +1,21 @@
 #ifndef SOLID_H
 #define SOLID_H
 
-#include "environment.h"
+inline vec3 solid_value(const Environment& env, const vec3& /*direction*/) {
+  return env.colour;
+}
 
-/** Constant radiance environment (no importance sampling; pdf is always 0). */
-class solid : public environment {
-  public:
-    explicit solid(const vec3& colour) : colour_(colour) {}
+inline void solid_sample_direction(const Environment& env, vec3& out_direction,
+  double& out_pdf_solid_angle, RNG& rng) {
+  (void)env;
+  (void)rng;
+  out_pdf_solid_angle = 0.0;
+  out_direction = vec3(0, 1, 0);
+}
 
-    vec3 value(const vec3& /*direction*/) const override { return colour_; }
-
-    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const override {
-      (void)rng;
-      out_pdf_solid_angle = 0.0;
-      out_direction = vec3(0, 1, 0);
-    }
-
-    double pdf(const vec3& /*direction*/) const override { return 0.0; }
-
-  private:
-    vec3 colour_;
-};
+inline double solid_pdf(const Environment& env, const vec3& /*direction*/) {
+  (void)env;
+  return 0.0;
+}
 
 #endif

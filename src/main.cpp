@@ -2,8 +2,7 @@
 
 #include <fstream>
 #include "camera.h"
-#include "environment/ibl.h"
-#include "environment/solid.h"
+#include "environment/environment.h"
 #include "geometry/geometry.h"
 #include "material/material.h"
 #include "world.h"
@@ -18,8 +17,8 @@ int main() {
     const int sphere_mat_green = scene.add_material(Material::plastic(color(0.314, 0.784, 0.12), 0.12));
     const int light_mat = scene.add_material(Material::diffuse_light(color(50.0, 50.0, 50.0)));
 
-    // scene.set_environment(make_unique<ibl>("assets/studio_small_08_4k.hdr"));
-    // scene.set_environment(make_unique<solid>(vec3(0.7, 0.8, 1.0)));
+    // scene.set_environment(Environment::ibl("assets/studio_small_08_4k.hdr"));
+    // scene.set_environment(Environment::solid(vec3(0.7, 0.8, 1.0)));
     scene.add(Geometry::plane_patch(
         vec3(-50, 0, -50),
         vec3(100, 0, 0),
