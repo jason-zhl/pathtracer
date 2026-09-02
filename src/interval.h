@@ -1,25 +1,25 @@
 #ifndef INTERVAL_H
 #define INTERVAL_H
 
-#include <limits>
+#include "host_device.h"
+
+#include <cmath>
 
 class interval {
   public:
     double min;
     double max;
 
-    interval()
-      : min(std::numeric_limits<double>::infinity()),
-        max(-std::numeric_limits<double>::infinity()) {}
+    HOST_DEVICE interval() : min(INFINITY), max(-INFINITY) {}
 
-    interval(double mn, double mx) : min(mn), max(mx) {}
+    HOST_DEVICE interval(double mn, double mx) : min(mn), max(mx) {}
 
     /** Accepted ray parameter range [min, max) (half-open on the right). */
-    bool surrounds(double t) const {
+    HOST_DEVICE bool surrounds(double t) const {
       return t >= min && t < max;
     }
 
-    bool contains_closed(double t) const {
+    HOST_DEVICE bool contains_closed(double t) const {
       return min <= t && t <= max;
     }
 };

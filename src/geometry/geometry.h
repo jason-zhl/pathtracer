@@ -3,12 +3,15 @@
 
 #include "global.h"
 
-class material;
 class intersection;
 
 class geometry {
   public:
+    explicit geometry(int mat_id = -1) : mat_id_(mat_id) {}
     virtual ~geometry() = default;
+
+    int mat_id() const { return mat_id_; }
+
     virtual bool hit(const ray& r, const interval* t_range, intersection& isect) const = 0;
     virtual vec3 normal(const vec3& point) const = 0;
 
@@ -22,6 +25,9 @@ class geometry {
 
     /** Finite surface measure for emitters (0 if not used as area light). */
     virtual double surface_area() const { return 0.0; }
+
+  protected:
+    int mat_id_ = -1;
 };
 
 class intersection {
@@ -29,7 +35,7 @@ class intersection {
     vec3 point;
     double t = 0;
     const geometry* surface = nullptr;
-    shared_ptr<material> mat;
+    int mat_id = -1;
 };
 
 #endif

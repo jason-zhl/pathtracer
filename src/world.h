@@ -1,10 +1,10 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "geometry.h"
-#include "material/diffuse_light.h"
 #include "environment/environment.h"
 #include "environment/solid.h"
+#include "geometry/geometry.h"
+#include "material/material.h"
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -22,18 +22,35 @@ class world {
   public:
     world() : env_(std::make_unique<solid>(vec3(1.0, 1.0, 1.0))) {}
 
+    int add_material(const Material& mat) {
+      materials_.push_back(mat);
+      return static_cast<int>(materials_.size()) - 1;
+    }
+
+    bool has_material(int id) const {
+      return id >= 0 && static_cast<std::size_t>(id) < materials_.size();
+    }
+
+    const Material& material(int id) const {
+      return materials_.at(static_cast<std::size_t>(id));
+    }
+
     void add(shared_ptr<geometry> object) { objects.push_back(object); }
 
-    /** Register geometry that uses `em` for next-event estimation (same pointer should already be in `add`). */
-    void add_area_light(shared_ptr<geometry> object, shared_ptr<diffuse_light> em) {
-      area_lights_.emplace_back(std::move(object), std::move(em));
+    /** Register geometry already in `add` for next-event estimation. */
+    void add_area_light(shared_ptr<geometry> object) {
+      area_lights_.push_back(std::move(object));
     }
 
     bool has_area_lights() const { return !area_lights_.empty(); }
 
+    const std::vector<shared_ptr<geometry>>& get_objects() const { return objects; }
+    const std::vector<shared_ptr<geometry>>& get_area_lights() const { return area_lights_; }
+
     void clear() {
       objects.clear();
       area_lights_.clear();
+      materials_.clear();
     }
 
     bool hit(const ray& r, const interval* t_range, intersection& isect) const {
@@ -81,7 +98,7 @@ class world {
      * MIS (power, β=2) vs mixture BSDF pdf at ω toward the sample reduces glossy double-count / spikes.
      */
     color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade) const {
-      if (area_lights_.empty() || isect.mat == nullptr) {
+      if (area_lights_.empty() || !has_material(isect.mat_id)) {
         return color(0, 0, 0);
       }
 
@@ -89,8 +106,10 @@ class world {
       const auto idx = static_cast<size_t>(random_double() * static_cast<double>(n_lights));
       const size_t pick = idx >= n_lights ? n_lights - 1 : idx;
 
-      const shared_ptr<geometry>& geom = area_lights_[pick].first;
-      const shared_ptr<diffuse_light>& em = area_lights_[pick].second;
+      const shared_ptr<geometry>& geom = area_lights_[pick];
+      if (!geom || !has_material(geom->mat_id())) {
+        return color(0, 0, 0);
+      }
 
       vec3 pL;
       vec3 nL;
@@ -131,15 +150,15 @@ class world {
       intersection light_isect;
       light_isect.point = pL;
       light_isect.surface = geom.get();
-      light_isect.mat = em;
+      light_isect.mat_id = geom->mat_id();
 
       const ray toward_light(isect.point, wo);
-      const color Le = em->emitted(toward_light, light_isect);
-      const color f = isect.mat->eval(r_in, isect, wo);
+      const color Le = material(geom->mat_id()).emitted(toward_light, light_isect);
+      const color f = material(isect.mat_id).eval(r_in, isect, wo);
 
       const double pdf_nee =
         (pdf_a / static_cast<double>(n_lights)) * dist2 / std::max(cos_light, 1e-20);
-      const double pdf_mat = isect.mat->pdf(r_in, isect, wo);
+      const double pdf_mat = material(isect.mat_id).pdf(r_in, isect, wo);
       const double mis_w = nee_mis_weight(pdf_nee, pdf_mat);
 
       return mis_w * f * Le * (cos_sh / std::max(pdf_nee, 1e-30));
@@ -155,8 +174,8 @@ class world {
         return 0.0;
       }
       bool registered = false;
-      for (const auto& pr : area_lights_) {
-        if (pr.first.get() == light_geom) {
+      for (const auto& light : area_lights_) {
+        if (light.get() == light_geom) {
           registered = true;
           break;
         }
@@ -189,7 +208,8 @@ class world {
 
   private:
     std::vector<shared_ptr<geometry>> objects;
-    std::vector<std::pair<shared_ptr<geometry>, shared_ptr<diffuse_light>>> area_lights_;
+    std::vector<shared_ptr<geometry>> area_lights_;
+    std::vector<Material> materials_;
     std::unique_ptr<environment> env_;
 };
 

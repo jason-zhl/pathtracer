@@ -11,10 +11,10 @@ using std::shared_ptr;
 using std::make_unique;
 using std::unique_ptr;
 
-const double INF = std::numeric_limits<double>::infinity();
-const double PI = std::acos(-1.0);
-const double INV_PI = 1.0 / PI;
-const double INV_2PI = 1.0 / (2.0 * PI);
+constexpr double INF = std::numeric_limits<double>::infinity();
+constexpr double PI = 3.14159265358979323846;
+constexpr double INV_PI = 1.0 / PI;
+constexpr double INV_2PI = 1.0 / (2.0 * PI);
 
 inline std::mt19937& random_generator() {
   static std::mt19937 gen{std::random_device{}()};
