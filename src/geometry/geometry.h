@@ -3,39 +3,104 @@
 
 #include "global.h"
 
-class intersection;
-
-class geometry {
-  public:
-    explicit geometry(int mat_id = -1) : mat_id_(mat_id) {}
-    virtual ~geometry() = default;
-
-    int mat_id() const { return mat_id_; }
-
-    virtual bool hit(const ray& r, const interval* t_range, intersection& isect) const = 0;
-    virtual vec3 normal(const vec3& point) const = 0;
-
-    /** Uniform area sample for NEE; pdf w.r.t. surface area. */
-    virtual bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
-      (void)p;
-      (void)n;
-      (void)pdf_area;
-      return false;
-    }
-
-    /** Finite surface measure for emitters (0 if not used as area light). */
-    virtual double surface_area() const { return 0.0; }
-
-  protected:
-    int mat_id_ = -1;
+enum class GeometryType {
+  Sphere,
+  PlanePatch
 };
 
-class intersection {
-  public:
-    vec3 point;
-    double t = 0;
-    const geometry* surface = nullptr;
-    int mat_id = -1;
+struct intersection {
+  vec3 point;
+  vec3 normal;
+  double t = 0;
+  int mat_id = -1;
+  int geom_id = -1;
 };
+
+struct Geometry {
+  GeometryType type = GeometryType::Sphere;
+  int mat_id = -1;
+
+  vec3 center;
+  double radius = 0.0;
+
+  vec3 corner;
+  vec3 u;
+  vec3 v;
+  vec3 n;
+  double n_len_sq = 0.0;
+
+  static Geometry sphere(const vec3& center, double radius, int mat_id);
+  static Geometry plane_patch(const vec3& corner, const vec3& u, const vec3& v, int mat_id);
+
+  bool hit(const ray& r, const interval* t_range, intersection& isect) const;
+  vec3 normal(const vec3& point) const;
+  bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const;
+  double surface_area() const;
+};
+
+inline Geometry Geometry::sphere(const vec3& center, double radius, int mat_id) {
+  Geometry g;
+  g.type = GeometryType::Sphere;
+  g.mat_id = mat_id;
+  g.center = center;
+  g.radius = std::fabs(radius);
+  return g;
+}
+
+inline Geometry Geometry::plane_patch(const vec3& corner, const vec3& u, const vec3& v,
+  int mat_id) {
+  Geometry g;
+  g.type = GeometryType::PlanePatch;
+  g.mat_id = mat_id;
+  g.corner = corner;
+  g.u = u;
+  g.v = v;
+  g.n = cross(u, v);
+  g.n_len_sq = g.n.length_squared();
+  return g;
+}
+
+#include "sphere.h"
+#include "plane_patch.h"
+
+inline bool Geometry::hit(const ray& r, const interval* t_range, intersection& isect) const {
+  switch (type) {
+    case GeometryType::Sphere:
+      return sphere_hit(*this, r, t_range, isect);
+    case GeometryType::PlanePatch:
+      return plane_hit(*this, r, t_range, isect);
+  }
+  return false;
+}
+
+inline vec3 Geometry::normal(const vec3& point) const {
+  switch (type) {
+    case GeometryType::Sphere:
+      return sphere_normal(*this, point);
+    case GeometryType::PlanePatch:
+      return plane_normal(*this, point);
+  }
+  return vec3();
+}
+
+inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+  switch (type) {
+    case GeometryType::Sphere:
+      return sphere_sample_emitter_point(*this, p, n, pdf_area);
+    case GeometryType::PlanePatch:
+      return plane_sample_emitter_point(*this, p, n, pdf_area);
+  }
+  return false;
+}
+
+inline double Geometry::surface_area() const {
+  switch (type) {
+    case GeometryType::Sphere:
+      return sphere_surface_area(*this);
+    case GeometryType::PlanePatch:
+      return plane_surface_area(*this);
+  }
+  return 0.0;
+}
 
 #endif

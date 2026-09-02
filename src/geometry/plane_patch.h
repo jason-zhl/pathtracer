@@ -2,76 +2,48 @@
 #define PLANE_PATCH_H
 
 #include <cmath>
-#include "geometry/geometry.h"
 
-// Finite planar patch: corner + s*u + t*v for s,t in [0,1] (parallelogram).
-class plane_patch : public geometry {
-  public:
-    plane_patch(const vec3& corner, const vec3& u, const vec3& v, int mat_id)
-        : geometry(mat_id),
-          corner_(corner),
-          u_(u),
-          v_(v),
-          n_(cross(u, v)),
-          n_len_sq_(n_.length_squared()) {}
-
-    const vec3& corner() const { return corner_; }
-    const vec3& u() const { return u_; }
-    const vec3& v() const { return v_; }
-
-    bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
-    vec3 normal(const vec3& point) const override;
-    bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const override;
-    double surface_area() const override;
-
-  private:
-    vec3 corner_;
-    vec3 u_;
-    vec3 v_;
-    vec3 n_;
-    double n_len_sq_;
-};
-
-inline bool plane_patch::hit(const ray& r, const interval* t_range, intersection& isect) const {
+inline bool plane_hit(const Geometry& g, const ray& r, const interval* t_range,
+  intersection& isect) {
   if (t_range == nullptr) {
     return false;
   }
-  if (n_len_sq_ < 1e-30) {
+  if (g.n_len_sq < 1e-30) {
     return false;
   }
-  double denom = dot(r.direction(), n_);
+  double denom = dot(r.direction(), g.n);
   if (std::fabs(denom) < 1e-12) {
     return false;
   }
-  double t = dot(corner_ - r.origin(), n_) / denom;
+  double t = dot(g.corner - r.origin(), g.n) / denom;
   if (!t_range->surrounds(t)) {
     return false;
   }
   vec3 p = r.at(t);
-  vec3 w = p - corner_;
-  double s = dot(cross(w, v_), n_) / n_len_sq_;
-  double tv = dot(cross(u_, w), n_) / n_len_sq_;
+  vec3 w = p - g.corner;
+  double s = dot(cross(w, g.v), g.n) / g.n_len_sq;
+  double tv = dot(cross(g.u, w), g.n) / g.n_len_sq;
   if (s < 0.0 || s > 1.0 || tv < 0.0 || tv > 1.0) {
     return false;
   }
   isect.point = p;
   isect.t = t;
-  isect.surface = this;
-  isect.mat_id = mat_id_;
+  isect.normal = g.n;
+  isect.mat_id = g.mat_id;
   return true;
 }
 
-inline vec3 plane_patch::normal(const vec3& point) const {
+inline vec3 plane_normal(const Geometry& g, const vec3& point) {
   (void)point;
-  return n_;
+  return g.n;
 }
 
-inline bool plane_patch::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area) {
   const double su = random_double();
   const double sv = random_double();
-  p = corner_ + su * u_ + sv * v_;
-  n = unit_vector(n_);
-  const double a = std::sqrt(n_len_sq_);
+  p = g.corner + su * g.u + sv * g.v;
+  n = unit_vector(g.n);
+  const double a = std::sqrt(g.n_len_sq);
   if (a < 1e-30) {
     return false;
   }
@@ -79,8 +51,8 @@ inline bool plane_patch::sample_emitter_point(vec3& p, vec3& n, double& pdf_area
   return true;
 }
 
-inline double plane_patch::surface_area() const {
-  return std::sqrt(n_len_sq_);
+inline double plane_surface_area(const Geometry& g) {
+  return std::sqrt(g.n_len_sq);
 }
 
 #endif

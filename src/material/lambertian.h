@@ -3,7 +3,7 @@
 
 inline bool lambertian_scatter(const Material& mat, const ray& r_in, const intersection& rec,
   color& attenuation, ray& scattered) {
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }
@@ -16,7 +16,7 @@ inline bool lambertian_scatter(const Material& mat, const ray& r_in, const inter
 
 inline color lambertian_eval(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }
@@ -30,7 +30,7 @@ inline color lambertian_eval(const Material& mat, const ray& r_in, const interse
 inline double lambertian_pdf(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
   (void)mat;
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }

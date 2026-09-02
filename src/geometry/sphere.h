@@ -2,34 +2,16 @@
 #define SPHERE_H
 
 #include <cmath>
-#include "geometry/geometry.h"
 
-class sphere : public geometry {
-  public:
-    sphere(const vec3& center, double radius, int mat_id)
-      : geometry(mat_id), center_(center), radius_(std::fabs(radius)) {}
-
-    const vec3& center() const { return center_; }
-    double radius() const { return radius_; }
-
-    bool hit(const ray& r, const interval* t_range, intersection& isect) const override;
-    vec3 normal(const vec3& point) const override;
-    bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const override;
-    double surface_area() const override;
-
-  private:
-    vec3 center_;
-    double radius_;
-};
-
-inline bool sphere::hit(const ray& r, const interval* t_range, intersection& isect) const {
+inline bool sphere_hit(const Geometry& g, const ray& r, const interval* t_range,
+  intersection& isect) {
   if (t_range == nullptr) {
     return false;
   }
-  vec3 oc = r.origin() - center_;
+  vec3 oc = r.origin() - g.center;
   auto a = dot(r.direction(), r.direction());
   auto b = 2.0 * dot(oc, r.direction());
-  auto c = dot(oc, oc) - radius_ * radius_;
+  auto c = dot(oc, oc) - g.radius * g.radius;
   auto discriminant = b * b - 4 * a * c;
   if (discriminant < 0) {
     return false;
@@ -44,24 +26,24 @@ inline bool sphere::hit(const ray& r, const interval* t_range, intersection& ise
   }
   isect.point = r.at(t);
   isect.t = t;
-  isect.surface = this;
-  isect.mat_id = mat_id_;
+  isect.normal = isect.point - g.center;
+  isect.mat_id = g.mat_id;
   return true;
 }
 
-inline vec3 sphere::normal(const vec3& point) const {
-  return (point - center_);
+inline vec3 sphere_normal(const Geometry& g, const vec3& point) {
+  return point - g.center;
 }
 
-inline bool sphere::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+inline bool sphere_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area) {
   n = random_unit_vector();
-  p = center_ + radius_ * n;
-  pdf_area = 1.0 / (4.0 * PI * radius_ * radius_);
+  p = g.center + g.radius * n;
+  pdf_area = 1.0 / (4.0 * PI * g.radius * g.radius);
   return true;
 }
 
-inline double sphere::surface_area() const {
-  return 4.0 * PI * radius_ * radius_;
+inline double sphere_surface_area(const Geometry& g) {
+  return 4.0 * PI * g.radius * g.radius;
 }
 
 #endif

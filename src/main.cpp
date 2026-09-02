@@ -1,12 +1,10 @@
 #include "global.h"
 
 #include <fstream>
-#include <memory>
 #include "camera.h"
 #include "environment/ibl.h"
 #include "environment/solid.h"
-#include "geometry/plane_patch.h"
-#include "geometry/sphere.h"
+#include "geometry/geometry.h"
 #include "material/material.h"
 #include "world.h"
 
@@ -22,17 +20,16 @@ int main() {
 
     // scene.set_environment(make_unique<ibl>("assets/studio_small_08_4k.hdr"));
     // scene.set_environment(make_unique<solid>(vec3(0.7, 0.8, 1.0)));
-    scene.add(make_shared<plane_patch>(
+    scene.add(Geometry::plane_patch(
         vec3(-50, 0, -50),
         vec3(100, 0, 0),
         vec3(0, 0, 100),
         ground_mat));
-    scene.add(make_shared<sphere>(vec3(0, 3, 15), 3, sphere_mat_red));
-    scene.add(make_shared<sphere>(vec3(-2, 0.5, 8), 0.5, sphere_mat_green));
-    const auto light_sphere = make_shared<sphere>(vec3(-20, 40, 0), 6, light_mat);
-    scene.add(light_sphere);
+    scene.add(Geometry::sphere(vec3(0, 3, 15), 3, sphere_mat_red));
+    scene.add(Geometry::sphere(vec3(-2, 0.5, 8), 0.5, sphere_mat_green));
+    const int light_sphere = scene.add(Geometry::sphere(vec3(-20, 40, 0), 6, light_mat));
     scene.add_area_light(light_sphere);
-    // scene.add(make_shared<sphere>(vec3(5, 3, 9), 3, sphere_mat_green));
+    // scene.add(Geometry::sphere(vec3(5, 3, 9), 3, sphere_mat_green));
 
     std::ofstream ppm_out("image.ppm");
     cam.render(scene, &ppm_out);

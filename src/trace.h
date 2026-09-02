@@ -48,7 +48,7 @@ inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
 
     color current(0, 0, 0);
 
-    vec3 n = unit_vector(isect.surface->normal(isect.point));
+    vec3 n = unit_vector(isect.normal);
     if (dot(curr_ray.direction(), n) > 0.0) {
       n = -n;
     }
@@ -58,7 +58,7 @@ inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
       if (prev_isect != nullptr && prev_ray != nullptr && scene.has_area_lights()) {
         const vec3 wo = unit_vector(curr_ray.direction());
         const double pdf_nee =
-          scene.area_light_pdf_nee_at_receiver(prev_isect->point, wo, isect.surface, isect.point);
+          scene.area_light_pdf_nee_at_receiver(prev_isect->point, wo, isect.geom_id, isect.point);
         if (pdf_nee > 0.0 && scene.has_material(prev_isect->mat_id)) {
           const double pdf_mat = scene.material(prev_isect->mat_id).pdf(*prev_ray, *prev_isect, wo);
           const double w_bsdf = nee_mis_weight(pdf_mat, pdf_nee);

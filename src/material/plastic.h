@@ -94,7 +94,7 @@ inline color plastic_eval_brdf(const Material& mat, const vec3& wi, const vec3& 
 
 inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersection& rec,
   color& attenuation, ray& scattered) {
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }
@@ -153,7 +153,7 @@ inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersec
 
 inline color plastic_eval(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }
@@ -165,7 +165,7 @@ inline color plastic_eval(const Material& mat, const ray& r_in, const intersecti
 
 inline double plastic_pdf(const Material& mat, const ray& r_in, const intersection& rec,
   const vec3& wo) {
-  vec3 n = unit_vector(rec.surface->normal(rec.point));
+  vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }

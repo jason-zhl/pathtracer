@@ -57,8 +57,8 @@ class camera {
       const auto total_pixels = static_cast<int64_t>(image_width_) * image_height_;
       std::vector<color> pixels(static_cast<std::size_t>(total_pixels));
 
-      render_gpu(scene, pixels.data(), total_pixels);
-      // render_cpu(scene, pixels.data(), total_pixels);
+      // render_gpu(scene, pixels.data(), total_pixels);
+      render_cpu(scene, pixels.data(), total_pixels);
 
       for (int64_t p = 0; p < total_pixels; ++p) {
         write_color(*out, pixels[static_cast<std::size_t>(p)]);
