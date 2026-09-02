@@ -4,16 +4,33 @@ project(PathTracer LANGUAGES CXX CUDA)
 
 find_package(CUDAToolkit REQUIRED)
 
+include(FetchContent)
+
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    yaml-cpp
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG 0.8.0
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
 set(CMAKE_CUDA_ARCHITECTURES native)
 
 add_executable(PathTracer
     src/main.cpp
+    src/configuration.cpp
     src/environment/ibl.cpp
     src/cuda/ray_colour.cu
 )
 
 target_include_directories(PathTracer PRIVATE src)
-target_link_libraries(PathTracer PRIVATE CUDA::cudart)
+target_link_libraries(PathTracer PRIVATE CUDA::cudart yaml-cpp)
 
 set_target_properties(PathTracer PROPERTIES
     CUDA_SEPARABLE_COMPILATION OFF

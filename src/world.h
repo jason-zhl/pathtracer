@@ -2,12 +2,14 @@
 #define WORLD_H
 
 #include "scene.h"
+#include <string>
 #include <utility>
 #include <vector>
 
 class World {
   public:
     World() : env_(Environment::solid(vec3(1.0f, 1.0f, 1.0f))) {}
+    explicit World(const std::string& config_path);
 
     int add_material(const Material& mat) {
       materials_.push_back(mat);

@@ -3,8 +3,10 @@
 
 #include <cstdint>
 #include <fstream>
+#include <string>
 #include <vector>
 
+#include "global.h"
 #include "cuda/ray_colour.h"
 #include "host_device.h"
 #include "timer.h"
@@ -46,6 +48,8 @@ class camera {
       defocus_disk_u_ = aperture_radius_ * u;
       defocus_disk_v_ = aperture_radius_ * v;
     }
+
+    explicit camera(const std::string& config_path);
 
     HOST_DEVICE ray primary_ray(int i, int j, RNG& rng) const {
       const float u = rng.next(-0.5f, 0.5f);
