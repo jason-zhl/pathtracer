@@ -43,7 +43,7 @@ inline Geometry Geometry::sphere(const vec3& center, double radius, int mat_id) 
   g.type = GeometryType::Sphere;
   g.mat_id = mat_id;
   g.center = center;
-  g.radius = std::fabs(radius);
+  g.radius = fabs(radius);
   return g;
 }
 

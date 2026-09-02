@@ -1,8 +1,6 @@
 #ifndef PLANE_PATCH_H
 #define PLANE_PATCH_H
 
-#include <cmath>
-
 HOST_DEVICE inline bool plane_hit(const Geometry& g, const ray& r, const interval* t_range,
   intersection& isect) {
   if (t_range == nullptr) {
@@ -12,7 +10,7 @@ HOST_DEVICE inline bool plane_hit(const Geometry& g, const ray& r, const interva
     return false;
   }
   double denom = dot(r.direction(), g.n);
-  if (std::fabs(denom) < 1e-12) {
+  if (fabs(denom) < 1e-12) {
     return false;
   }
   double t = dot(g.corner - r.origin(), g.n) / denom;
@@ -44,7 +42,7 @@ HOST_DEVICE inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, v
   const double sv = rng.next();
   p = g.corner + su * g.u + sv * g.v;
   n = unit_vector(g.n);
-  const double a = std::sqrt(g.n_len_sq);
+  const double a = sqrt(g.n_len_sq);
   if (a < 1e-30) {
     return false;
   }
@@ -53,7 +51,7 @@ HOST_DEVICE inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, v
 }
 
 HOST_DEVICE inline double plane_surface_area(const Geometry& g) {
-  return std::sqrt(g.n_len_sq);
+  return sqrt(g.n_len_sq);
 }
 
 #endif

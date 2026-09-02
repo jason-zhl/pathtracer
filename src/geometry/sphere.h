@@ -1,8 +1,6 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include <cmath>
-
 HOST_DEVICE inline bool sphere_hit(const Geometry& g, const ray& r, const interval* t_range,
   intersection& isect) {
   if (t_range == nullptr) {
@@ -16,7 +14,7 @@ HOST_DEVICE inline bool sphere_hit(const Geometry& g, const ray& r, const interv
   if (discriminant < 0) {
     return false;
   }
-  const auto sqrt_d = std::sqrt(discriminant);
+  const auto sqrt_d = sqrt(discriminant);
   auto t = (-b - sqrt_d) / (2.0 * a);
   if (!t_range->surrounds(t)) {
     t = (-b + sqrt_d) / (2.0 * a);

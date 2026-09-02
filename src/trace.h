@@ -1,8 +1,6 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include <cmath>
-
 #include "world.h"
 
 #ifndef CAMERA_H
@@ -11,9 +9,8 @@
 
 /** Power heuristic MIS weight for strategy with pdf_self vs the other; β = 2 (Veach). */
 HOST_DEVICE inline double mis_weight_power(double pdf_self, double pdf_other) {
-  constexpr double beta = 2.0;
-  const double a = std::pow(pdf_self, beta);
-  const double b = std::pow(pdf_other, beta);
+  const double a = pdf_self * pdf_self;
+  const double b = pdf_other * pdf_other;
   const double denom = a + b;
   return denom > 0.0 ? a / denom : 0.0;
 }

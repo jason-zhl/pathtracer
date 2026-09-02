@@ -3,7 +3,6 @@
 
 #include "rng.h"
 
-#include <cmath>
 #include <iostream>
 
 class vec3 {
@@ -54,7 +53,7 @@ class vec3 {
     }
 
     HOST_DEVICE double length() const {
-      return hd_sqrt(length_squared());
+      return sqrt(length_squared());
     }
 
     HOST_DEVICE double length_squared() const {
@@ -121,7 +120,7 @@ HOST_DEVICE inline vec3 unit_vector(const vec3& v) {
 
 // Branchless ONB method, by Duff et al.
 HOST_DEVICE inline void orthonormal_basis(const vec3& n, vec3& t, vec3& b) {
-  double sign = hd_copysign(1.0, n.z());
+  double sign = copysign(1.0, n.z());
   const double a = -1.0 / (sign + n.z());
   const double b_val = n.x() * n.y() * a;
   t = vec3(1.0 + sign * n.x() * n.x() * a, sign * b_val, -sign * n.x());
@@ -133,7 +132,7 @@ HOST_DEVICE inline vec3 random_unit_vector(RNG& rng) {
     vec3 p(rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0);
     const double len2 = p.length_squared();
     if (len2 <= 1.0 && len2 > 1e-20) {
-      return p / hd_sqrt(len2);
+      return p / sqrt(len2);
     }
   }
 }
@@ -143,10 +142,10 @@ HOST_DEVICE inline vec3 lambertian_random(const vec3& n, RNG& rng) {
   double u = rng.next();
   double v = rng.next();
   double phi = 2 * PI * u;
-  double r = hd_sqrt(v);
-  double x = r * hd_cos(phi);
-  double y = r * hd_sin(phi);
-  double z = hd_sqrt(1.0 - v);
+  double r = sqrt(v);
+  double x = r * cos(phi);
+  double y = r * sin(phi);
+  double z = sqrt(1.0 - v);
   vec3 t, b;
   orthonormal_basis(n, t, b);
   return t * x + b * y + n * z;

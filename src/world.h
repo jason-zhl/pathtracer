@@ -4,15 +4,13 @@
 #include "environment/environment.h"
 #include "geometry/geometry.h"
 #include "material/material.h"
-#include <cmath>
 #include <utility>
 #include <vector>
 
 /** β = 2 power heuristic (same as camera / Veach). */
 HOST_DEVICE inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
-  constexpr double beta = 2.0;
-  const double a = std::pow(pdf_nee, beta);
-  const double b = std::pow(pdf_mat, beta);
+  const double a = pdf_nee * pdf_nee;
+  const double b = pdf_mat * pdf_mat;
   const double d = a + b;
   return d > 0.0 ? a / d : 0.0;
 }
@@ -138,7 +136,7 @@ class world {
       if (dist2 < 1e-20) {
         return color(0, 0, 0);
       }
-      const double dist = std::sqrt(dist2);
+      const double dist = sqrt(dist2);
       const vec3 wo = d / dist;
 
       const double cos_sh = dot(n_shade, wo);
@@ -173,11 +171,11 @@ class world {
       const color f = material(isect.mat_id).eval(r_in, isect, wo);
 
       const double pdf_nee =
-        (pdf_a / static_cast<double>(n_lights)) * dist2 / std::max(cos_light, 1e-20);
+        (pdf_a / static_cast<double>(n_lights)) * dist2 / fmax(cos_light, 1e-20);
       const double pdf_mat = material(isect.mat_id).pdf(r_in, isect, wo);
       const double mis_w = nee_mis_weight(pdf_nee, pdf_mat);
 
-      return mis_w * f * Le * (cos_sh / std::max(pdf_nee, 1e-30));
+      return mis_w * f * Le * (cos_sh / fmax(pdf_nee, 1e-30));
     }
 
     /**
