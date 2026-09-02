@@ -11,27 +11,27 @@ int main() {
     // camera cam(800, 1.0, 2000);
     camera cam(800, 1.0, 10);
 
-    world scene;
-    const int ground_mat = scene.add_material(Material::lambertian(color(1.0, 1.0, 1.0)));
-    const int sphere_mat_red = scene.add_material(Material::plastic(color(0.85, 0.15, 0.12), 0.12));
-    const int sphere_mat_green = scene.add_material(Material::plastic(color(0.314, 0.784, 0.12), 0.12));
-    const int light_mat = scene.add_material(Material::diffuse_light(color(50.0, 50.0, 50.0)));
+    World world;
+    const int ground_mat = world.add_material(Material::lambertian(color(1.0, 1.0, 1.0)));
+    const int sphere_mat_red = world.add_material(Material::plastic(color(0.85, 0.15, 0.12), 0.12));
+    const int sphere_mat_green = world.add_material(Material::plastic(color(0.314, 0.784, 0.12), 0.12));
+    const int light_mat = world.add_material(Material::diffuse_light(color(50.0, 50.0, 50.0)));
 
-    // scene.set_environment(Environment::ibl("assets/studio_small_08_4k.hdr"));
-    // scene.set_environment(Environment::solid(vec3(0.7, 0.8, 1.0)));
-    scene.add(Geometry::plane_patch(
+    // world.set_environment(Environment::ibl("assets/studio_small_08_4k.hdr"));
+    // world.set_environment(Environment::solid(vec3(0.7, 0.8, 1.0)));
+    world.add(Geometry::plane_patch(
         vec3(-50, 0, -50),
         vec3(100, 0, 0),
         vec3(0, 0, 100),
         ground_mat));
-    scene.add(Geometry::sphere(vec3(0, 3, 15), 3, sphere_mat_red));
-    scene.add(Geometry::sphere(vec3(-2, 0.5, 8), 0.5, sphere_mat_green));
-    const int light_sphere = scene.add(Geometry::sphere(vec3(-20, 40, 0), 6, light_mat));
-    scene.add_area_light(light_sphere);
-    // scene.add(Geometry::sphere(vec3(5, 3, 9), 3, sphere_mat_green));
+    world.add(Geometry::sphere(vec3(0, 3, 15), 3, sphere_mat_red));
+    world.add(Geometry::sphere(vec3(-2, 0.5, 8), 0.5, sphere_mat_green));
+    const int light_sphere = world.add(Geometry::sphere(vec3(-20, 40, 0), 6, light_mat));
+    world.add_area_light(light_sphere);
+    // world.add(Geometry::sphere(vec3(5, 3, 9), 3, sphere_mat_green));
 
     std::ofstream ppm_out("image.ppm");
-    cam.render(scene, &ppm_out);
+    cam.render(world, &ppm_out);
     ppm_out.close();
 
     return 0;

@@ -1,7 +1,7 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include "world.h"
+#include "scene.h"
 
 #ifndef CAMERA_H
 #include "camera.h"
@@ -15,7 +15,7 @@ HOST_DEVICE inline double mis_weight_power(double pdf_self, double pdf_other) {
   return denom > 0.0 ? a / denom : 0.0;
 }
 
-HOST_DEVICE inline color ray_colour(const ray& r, const camera& cam, const world& scene, RNG& rng) {
+HOST_DEVICE inline color ray_colour(const ray& r, const camera& cam, const Scene& scene, RNG& rng) {
   color L(0, 0, 0);
   color throughput(1, 1, 1);
   ray curr_ray = r;

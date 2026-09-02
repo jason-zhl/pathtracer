@@ -47,7 +47,7 @@ class camera {
     HOST_DEVICE int max_depth() const { return max_depth_; }
     HOST_DEVICE const interval& ray_t() const { return ray_t_; }
 
-    void render(const world& scene, std::ofstream* out) const {
+    void render(const World& world, std::ofstream* out) const {
       if (out == nullptr) {
         return;
       }
@@ -57,8 +57,8 @@ class camera {
       const auto total_pixels = static_cast<int64_t>(image_width_) * image_height_;
       std::vector<color> pixels(static_cast<std::size_t>(total_pixels));
 
-      // render_gpu(scene, pixels.data(), total_pixels);
-      render_cpu(scene, pixels.data(), total_pixels);
+      render_gpu(world, pixels.data(), total_pixels);
+      // render_cpu(world, pixels.data(), total_pixels);
 
       for (int64_t p = 0; p < total_pixels; ++p) {
         write_color(*out, pixels[static_cast<std::size_t>(p)]);
@@ -66,15 +66,15 @@ class camera {
     }
 
   private:
-    void render_cpu(const world& scene, color* pixels, int64_t total_pixels) const;
+    void render_cpu(const World& world, color* pixels, int64_t total_pixels) const;
 
-    void render_gpu(const world& /*scene*/, color* pixels, int64_t total_pixels) const {
+    void render_gpu(const World& world, color* pixels, int64_t total_pixels) const {
       if (pixels == nullptr || total_pixels <= 0) {
         return;
       }
 
       timer render_timer(total_pixels);
-      if (!cuda_ray_colour(pixels, total_pixels, image_width_, image_height_)) {
+      if (!cuda_ray_colour(pixels, total_pixels, *this, world.view())) {
         return;
       }
       render_timer.print_complete("Render complete");
@@ -93,12 +93,13 @@ class camera {
 
 #include "trace.h"
 
-inline void camera::render_cpu(const world& scene, color* pixels, int64_t total_pixels) const {
+inline void camera::render_cpu(const World& world, color* pixels, int64_t total_pixels) const {
   if (pixels == nullptr || total_pixels <= 0) {
     return;
   }
 
   timer render_timer(total_pixels);
+  const Scene scene = world.view();
 
   for (auto j{0}; j < image_height_; j++) {
     for (auto i{0}; i < image_width_; i++) {

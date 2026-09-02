@@ -1,35 +1,17 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "environment/environment.h"
-#include "geometry/geometry.h"
-#include "material/material.h"
+#include "scene.h"
 #include <utility>
 #include <vector>
 
-/** β = 2 power heuristic (same as camera / Veach). */
-HOST_DEVICE inline double nee_mis_weight(double pdf_nee, double pdf_mat) {
-  const double a = pdf_nee * pdf_nee;
-  const double b = pdf_mat * pdf_mat;
-  const double d = a + b;
-  return d > 0.0 ? a / d : 0.0;
-}
-
-class world {
+class World {
   public:
-    world() : env_(Environment::solid(vec3(1.0, 1.0, 1.0))) {}
+    World() : env_(Environment::solid(vec3(1.0, 1.0, 1.0))) {}
 
     int add_material(const Material& mat) {
       materials_.push_back(mat);
       return static_cast<int>(materials_.size()) - 1;
-    }
-
-    HOST_DEVICE bool has_material(int id) const {
-      return id >= 0 && static_cast<std::size_t>(id) < materials_.size();
-    }
-
-    HOST_DEVICE const Material& material(int id) const {
-      return materials_.at(static_cast<std::size_t>(id));
     }
 
     int add(const Geometry& object) {
@@ -37,25 +19,11 @@ class world {
       return static_cast<int>(geometries_.size()) - 1;
     }
 
-    HOST_DEVICE bool has_geometry(int id) const {
-      return id >= 0 && static_cast<std::size_t>(id) < geometries_.size();
-    }
-
-    HOST_DEVICE const Geometry& geometry(int id) const {
-      return geometries_.at(static_cast<std::size_t>(id));
-    }
-
-    /** Register geometry already in `add` for next-event estimation. */
     void add_area_light(int geom_id) {
-      if (has_geometry(geom_id)) {
+      if (geom_id >= 0 && static_cast<std::size_t>(geom_id) < geometries_.size()) {
         area_lights_.push_back(geom_id);
       }
     }
-
-    HOST_DEVICE bool has_area_lights() const { return !area_lights_.empty(); }
-
-    const std::vector<Geometry>& geometries() const { return geometries_; }
-    const std::vector<int>& area_light_ids() const { return area_lights_; }
 
     void clear() {
       geometries_.clear();
@@ -64,161 +32,19 @@ class world {
       env_ = Environment::solid(vec3(1.0, 1.0, 1.0));
     }
 
-    HOST_DEVICE bool hit(const ray& r, const interval* t_range, intersection& isect) const {
-      if (t_range == nullptr) {
-        return false;
-      }
-
-      intersection closest;
-      double closest_t = t_range->max;
-      bool hit_anything = false;
-
-      for (int i = 0; i < static_cast<int>(geometries_.size()); ++i) {
-        intersection temp;
-        if (geometries_[static_cast<std::size_t>(i)].hit(r, t_range, temp)) {
-          if (!hit_anything || temp.t < closest_t) {
-            temp.geom_id = i;
-            closest = temp;
-            closest_t = temp.t;
-            hit_anything = true;
-          }
-        }
-      }
-
-      if (hit_anything) {
-        isect = closest;
-      }
-      return hit_anything;
-    }
-
     void set_environment(Environment env) { env_ = std::move(env); }
 
-    HOST_DEVICE vec3 get_env(const vec3& direction) const { return env_.value(direction); }
-
-    HOST_DEVICE void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
-      env_.sample_direction(out_direction, out_pdf, rng);
-    }
-
-    HOST_DEVICE double env_pdf(const vec3& direction) const { return env_.pdf(direction); }
-
-    /**
-     * One-sample area direct lighting: uniform light, uniform point (area pdf), shadow ray.
-     * MIS (power, β=2) vs mixture BSDF pdf at ω toward the sample reduces glossy double-count / spikes.
-     */
-    HOST_DEVICE color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade,
-      RNG& rng) const {
-      if (area_lights_.empty() || !has_material(isect.mat_id)) {
-        return color(0, 0, 0);
-      }
-
-      const auto n_lights = area_lights_.size();
-      const auto idx = static_cast<size_t>(rng.next() * static_cast<double>(n_lights));
-      const size_t pick = idx >= n_lights ? n_lights - 1 : idx;
-      const int geom_id = area_lights_[pick];
-      if (!has_geometry(geom_id)) {
-        return color(0, 0, 0);
-      }
-
-      const Geometry& geom = geometry(geom_id);
-      if (!has_material(geom.mat_id)) {
-        return color(0, 0, 0);
-      }
-
-      vec3 pL;
-      vec3 nL;
-      double pdf_a = 0.0;
-      if (!geom.sample_emitter_point(pL, nL, pdf_a, rng) || pdf_a <= 0.0) {
-        return color(0, 0, 0);
-      }
-
-      const vec3 d = pL - isect.point;
-      const double dist2 = d.length_squared();
-      if (dist2 < 1e-20) {
-        return color(0, 0, 0);
-      }
-      const double dist = sqrt(dist2);
-      const vec3 wo = d / dist;
-
-      const double cos_sh = dot(n_shade, wo);
-      if (cos_sh <= 0.0) {
-        return color(0, 0, 0);
-      }
-
-      const double cos_light = dot(nL, -wo);
-      if (cos_light <= 0.0) {
-        return color(0, 0, 0);
-      }
-
-      const interval shadow_range(1e-3, dist - 1e-3);
-      if (shadow_range.min >= shadow_range.max) {
-        return color(0, 0, 0);
-      }
-
-      const ray shadow_ray(isect.point + n_shade * 1e-3, wo);
-      intersection occ;
-      if (hit(shadow_ray, &shadow_range, occ)) {
-        return color(0, 0, 0);
-      }
-
-      intersection light_isect;
-      light_isect.point = pL;
-      light_isect.normal = nL;
-      light_isect.mat_id = geom.mat_id;
-      light_isect.geom_id = geom_id;
-
-      const ray toward_light(isect.point, wo);
-      const color Le = material(geom.mat_id).emitted(toward_light, light_isect);
-      const color f = material(isect.mat_id).eval(r_in, isect, wo);
-
-      const double pdf_nee =
-        (pdf_a / static_cast<double>(n_lights)) * dist2 / fmax(cos_light, 1e-20);
-      const double pdf_mat = material(isect.mat_id).pdf(r_in, isect, wo);
-      const double mis_w = nee_mis_weight(pdf_nee, pdf_mat);
-
-      return mis_w * f * Le * (cos_sh / fmax(pdf_nee, 1e-30));
-    }
-
-    /**
-     * Solid-angle pdf at `shading_point` for “uniform light + uniform area point” (same Jacobian as NEE),
-     * when the path direction `wo` hits `light_geom_id` at `light_point`. Zero if not a registered area light.
-     */
-    HOST_DEVICE double area_light_pdf_nee_at_receiver(const vec3& shading_point, const vec3& wo_toward_light,
-      int light_geom_id, const vec3& light_point) const {
-      if (area_lights_.empty() || !has_geometry(light_geom_id)) {
-        return 0.0;
-      }
-      bool registered = false;
-      for (const int id : area_lights_) {
-        if (id == light_geom_id) {
-          registered = true;
-          break;
-        }
-      }
-      if (!registered) {
-        return 0.0;
-      }
-
-      const Geometry& light_geom = geometry(light_geom_id);
-      const vec3 wo = unit_vector(wo_toward_light);
-      const vec3 nL = unit_vector(light_geom.normal(light_point));
-      const double cos_light = dot(nL, -wo);
-      if (cos_light <= 1e-20) {
-        return 0.0;
-      }
-
-      const vec3 delta = light_point - shading_point;
-      const double dist2 = delta.length_squared();
-      if (dist2 < 1e-20) {
-        return 0.0;
-      }
-
-      const double A = light_geom.surface_area();
-      if (A <= 0.0) {
-        return 0.0;
-      }
-      const double pdf_a = 1.0 / A;
-      const auto n_lights = area_lights_.size();
-      return (pdf_a / static_cast<double>(n_lights)) * dist2 / cos_light;
+    Scene view() const {
+      Scene scene;
+      scene.geometries = geometries_.empty() ? nullptr : geometries_.data();
+      scene.n_geometries = static_cast<int>(geometries_.size());
+      scene.materials = materials_.empty() ? nullptr : materials_.data();
+      scene.n_materials = static_cast<int>(materials_.size());
+      scene.area_lights = area_lights_.empty() ? nullptr : area_lights_.data();
+      scene.n_area_lights = static_cast<int>(area_lights_.size());
+      scene.env = &env_;
+      scene.env_colour = env_.colour;
+      return scene;
     }
 
   private:

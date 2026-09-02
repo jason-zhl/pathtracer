@@ -42,6 +42,10 @@ inline Environment Environment::solid(const vec3& colour) {
 #include "ibl.h"
 
 HOST_DEVICE inline vec3 Environment::value(const vec3& direction) const {
+#ifdef __CUDA_ARCH__
+  (void)direction;
+  return colour;
+#else
   switch (type) {
     case EnvType::Solid:
       return solid_value(*this, direction);
@@ -49,10 +53,14 @@ HOST_DEVICE inline vec3 Environment::value(const vec3& direction) const {
       return ibl_value(*this, direction);
   }
   return vec3();
+#endif
 }
 
 HOST_DEVICE inline void Environment::sample_direction(vec3& out_direction, double& out_pdf_solid_angle,
   RNG& rng) const {
+#ifdef __CUDA_ARCH__
+  solid_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
+#else
   switch (type) {
     case EnvType::Solid:
       solid_sample_direction(*this, out_direction, out_pdf_solid_angle, rng);
@@ -63,9 +71,13 @@ HOST_DEVICE inline void Environment::sample_direction(vec3& out_direction, doubl
   }
   out_pdf_solid_angle = 0.0;
   out_direction = vec3(0, 1, 0);
+#endif
 }
 
 HOST_DEVICE inline double Environment::pdf(const vec3& direction) const {
+#ifdef __CUDA_ARCH__
+  return solid_pdf(*this, direction);
+#else
   switch (type) {
     case EnvType::Solid:
       return solid_pdf(*this, direction);
@@ -73,6 +85,7 @@ HOST_DEVICE inline double Environment::pdf(const vec3& direction) const {
       return ibl_pdf(*this, direction);
   }
   return 0.0;
+#endif
 }
 
 #endif
