@@ -12,33 +12,47 @@
 
 class camera {
   public:
-    camera(int image_width, float aspect_ratio, int samples_per_pixel = 10)
-      : image_width_(image_width), samples_per_pixel_(samples_per_pixel) {
+    camera(int image_width, float aspect_ratio, int samples_per_pixel = 10,
+           float focus_dist = 5.5f, float aperture_radius = 0.0f)
+      : image_width_(image_width), samples_per_pixel_(samples_per_pixel),
+        aperture_radius_(aperture_radius) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
 
       const auto viewport_height = 4.0f;
       const auto viewport_width = viewport_height * (float(image_width_) / image_height_);
       const auto focal_length = 5.5f;
+      const auto focus_scale = focus_dist / focal_length;
 
       center_ = vec3(0, 3, 0);
 
-      const auto viewport_horizontal = vec3(viewport_width, 0, 0);
-      const auto viewport_vertical = vec3(0, viewport_height, 0);
+      const auto viewport_horizontal = vec3(viewport_width * focus_scale, 0, 0);
+      const auto viewport_vertical = vec3(0, viewport_height * focus_scale, 0);
 
       pixel_delta_horizontal_ = viewport_horizontal / image_width_;
       pixel_delta_vertical_ = viewport_vertical / image_height_;
 
-      const auto viewport_upper_left = center_ + vec3(0, 0, focal_length)
+      const auto viewport_upper_left = center_ + vec3(0, 0, focus_dist)
         - viewport_horizontal / 2 + viewport_vertical / 2;
       pixel00_ = viewport_upper_left + 0.5f * (pixel_delta_horizontal_ + pixel_delta_vertical_);
+
+      defocus_disk_u_ = vec3(aperture_radius_, 0, 0);
+      defocus_disk_v_ = vec3(0, aperture_radius_, 0);
     }
 
-    HOST_DEVICE ray primary_ray(int i, int j, float u, float v) const {
+    HOST_DEVICE ray primary_ray(int i, int j, RNG& rng) const {
+      const float u = rng.next(-0.5f, 0.5f);
+      const float v = rng.next(-0.5f, 0.5f);
       const vec3 pixel_center = pixel00_ + (static_cast<float>(i) * pixel_delta_horizontal_)
         - (static_cast<float>(j) * pixel_delta_vertical_);
       const vec3 sample_point = pixel_center + u * pixel_delta_horizontal_
         - v * pixel_delta_vertical_;
-      return ray(center_, sample_point - center_);
+
+      vec3 origin = center_;
+      if (aperture_radius_ > 0.0f) {
+        const vec3 disk = random_in_unit_disk(rng);
+        origin += disk.x() * defocus_disk_u_ + disk.y() * defocus_disk_v_;
+      }
+      return ray(origin, sample_point - origin);
     }
 
     HOST_DEVICE int image_width() const { return image_width_; }
@@ -89,6 +103,9 @@ class camera {
     vec3 pixel00_;
     vec3 pixel_delta_horizontal_;
     vec3 pixel_delta_vertical_;
+    float aperture_radius_ = 0.0f;
+    vec3 defocus_disk_u_;
+    vec3 defocus_disk_v_;
 };
 
 #include "trace.h"
@@ -106,9 +123,7 @@ inline void camera::render_cpu(const World& world, color* pixels, int64_t total_
       color pixel_color(0, 0, 0);
       for (auto s{0}; s < samples_per_pixel_; s++) {
         RNG rng = make_rng(i, j, s);
-        const auto u = rng.next(-0.5f, 0.5f);
-        const auto v = rng.next(-0.5f, 0.5f);
-        pixel_color += ray_colour(primary_ray(i, j, u, v), *this, scene, rng);
+        pixel_color += ray_colour(primary_ray(i, j, rng), *this, scene, rng);
       }
       pixel_color /= static_cast<float>(samples_per_pixel_);
       pixels[static_cast<int64_t>(j) * image_width_ + i] = pixel_color;

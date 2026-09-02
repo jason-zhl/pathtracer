@@ -22,9 +22,7 @@ __global__ void ray_colour_kernel(float* rgb, camera cam, Scene scene) {
   const int spp = cam.samples_per_pixel();
   for (int s = 0; s < spp; ++s) {
     RNG rng = make_rng(x, y, s);
-    const float u = rng.next(-0.5f, 0.5f);
-    const float v = rng.next(-0.5f, 0.5f);
-    pixel += ray_colour(cam.primary_ray(x, y, u, v), cam, scene, rng);
+    pixel += ray_colour(cam.primary_ray(x, y, rng), cam, scene, rng);
   }
   pixel /= static_cast<float>(spp);
 

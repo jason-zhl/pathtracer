@@ -137,6 +137,12 @@ HOST_DEVICE inline vec3 random_unit_vector(RNG& rng) {
   }
 }
 
+HOST_DEVICE inline vec3 random_in_unit_disk(RNG& rng) {
+  const float r = sqrtf(rng.next());
+  const float theta = 2.0f * PI * rng.next();
+  return vec3(r * cosf(theta), r * sinf(theta), 0.0f);
+}
+
 // Cosine-weighted importance sampling for diffuse surfaces
 HOST_DEVICE inline vec3 lambertian_random(const vec3& n, RNG& rng) {
   float u = rng.next();

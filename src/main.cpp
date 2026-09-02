@@ -9,7 +9,7 @@
 
 int main() {
     // camera cam(800, 1.0, 2000);
-    camera cam(800, 1.0f, 2000);
+    camera cam(800, 1.0f, 2000, 15.0f, 0.25f);
 
     World world;
     const int ground_mat = world.add_material(Material::lambertian(color(1.0f, 1.0f, 1.0f)));
