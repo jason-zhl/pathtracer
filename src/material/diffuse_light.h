@@ -2,12 +2,13 @@
 #define DIFFUSE_LIGHT_H
 
 inline bool diffuse_light_scatter(const Material& mat, const ray& r_in, const intersection& rec,
-  color& attenuation, ray& scattered) {
+  color& attenuation, ray& scattered, RNG& rng) {
   (void)mat;
   (void)r_in;
   (void)rec;
   (void)attenuation;
   (void)scattered;
+  (void)rng;
   return false;
 }
 

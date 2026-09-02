@@ -2,12 +2,12 @@
 #define LAMBERTIAN_H
 
 inline bool lambertian_scatter(const Material& mat, const ray& r_in, const intersection& rec,
-  color& attenuation, ray& scattered) {
+  color& attenuation, ray& scattered, RNG& rng) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
   }
-  const vec3 scatter_direction = unit_vector(lambertian_random(n));
+  const vec3 scatter_direction = unit_vector(lambertian_random(n, rng));
   const double surface_offset = 1e-3;
   scattered = ray(rec.point + n * surface_offset, scatter_direction);
   attenuation = mat.albedo;

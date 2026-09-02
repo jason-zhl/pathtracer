@@ -183,21 +183,14 @@ vec3 ibl::bilinear_interpolation(double u, double v) const {
   return c0 * (1.0 - ty) + c1 * ty;
 }
 
-void ibl::sample_direction(vec3& out_direction, double& out_pdf_solid_angle) const {
+void ibl::sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const {
   if (total_weight_ <= 0.0) {
     out_pdf_solid_angle = 1.0 / (4.0 * PI);
-    for (;;) {
-      const vec3 p(random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0);
-      const double len2 = p.length_squared();
-      if (len2 <= 1.0 && len2 > 1e-20) {
-        out_direction = unit_vector(p);
-        break;
-      }
-    }
+    out_direction = random_unit_vector(rng);
     return;
   }
 
-  const double r1 = random_double() * total_weight_;
+  const double r1 = rng.next() * total_weight_;
   const auto row_it = std::upper_bound(marginal_cdf_.begin(), marginal_cdf_.end(), r1);
   int j = static_cast<int>(row_it - marginal_cdf_.begin()) - 1;
   j = std::clamp(j, 0, height_ - 1);
@@ -205,7 +198,7 @@ void ibl::sample_direction(vec3& out_direction, double& out_pdf_solid_angle) con
   const double row_lo = marginal_cdf_[static_cast<size_t>(j)];
   const double row_hi = marginal_cdf_[static_cast<size_t>(j) + 1];
   const double row_sum = row_hi - row_lo;
-  const double r2 = random_double() * row_sum;
+  const double r2 = rng.next() * row_sum;
 
   const size_t row_off = static_cast<size_t>(j) * (static_cast<size_t>(width_) + 1);
   const auto col_it = std::upper_bound(cond_cdf_.begin() + static_cast<std::ptrdiff_t>(row_off),

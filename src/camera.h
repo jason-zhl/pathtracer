@@ -104,9 +104,10 @@ inline void camera::render_cpu(const world& scene, color* pixels, int64_t total_
     for (auto i{0}; i < image_width_; i++) {
       color pixel_color(0, 0, 0);
       for (auto s{0}; s < samples_per_pixel_; s++) {
-        const auto u = random_double(-0.5, 0.5);
-        const auto v = random_double(-0.5, 0.5);
-        pixel_color += ray_colour(primary_ray(i, j, u, v), *this, scene);
+        RNG rng = make_rng(i, j, s);
+        const auto u = rng.next(-0.5, 0.5);
+        const auto v = rng.next(-0.5, 0.5);
+        pixel_color += ray_colour(primary_ray(i, j, u, v), *this, scene, rng);
       }
       pixel_color /= static_cast<double>(samples_per_pixel_);
       pixels[static_cast<int64_t>(j) * image_width_ + i] = pixel_color;

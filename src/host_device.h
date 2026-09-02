@@ -25,11 +25,19 @@ HOST_DEVICE inline double hd_copysign(double mag, double sgn) {
 #endif
 }
 
-HOST_DEVICE inline double hd_fabs(double x) {
+HOST_DEVICE inline double hd_sin(double x) {
 #ifdef __CUDA_ARCH__
-  return fabs(x);
+  return sin(x);
 #else
-  return std::fabs(x);
+  return std::sin(x);
+#endif
+}
+
+HOST_DEVICE inline double hd_cos(double x) {
+#ifdef __CUDA_ARCH__
+  return cos(x);
+#else
+  return std::cos(x);
 #endif
 }
 

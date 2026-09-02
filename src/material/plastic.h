@@ -41,9 +41,9 @@ inline vec3 plastic_reflect(const vec3& wi, const vec3& m) {
   return 2.0 * dot(wi, m) * m - wi;
 }
 
-inline vec3 plastic_sample_ggx(const Material& mat, const vec3& n) {
-  const double xi1 = random_double();
-  const double xi2 = random_double();
+inline vec3 plastic_sample_ggx(const Material& mat, const vec3& n, RNG& rng) {
+  const double xi1 = rng.next();
+  const double xi2 = rng.next();
   const double cos_theta =
     std::sqrt(std::max(0.0, (1.0 - xi2) / (1.0 + (mat.a2 - 1.0) * xi2)));
   const double sin_theta = std::sqrt(std::max(0.0, 1.0 - cos_theta * cos_theta));
@@ -93,7 +93,7 @@ inline color plastic_eval_brdf(const Material& mat, const vec3& wi, const vec3& 
 }  // namespace
 
 inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersection& rec,
-  color& attenuation, ray& scattered) {
+  color& attenuation, ray& scattered, RNG& rng) {
   vec3 n = unit_vector(rec.normal);
   if (dot(r_in.direction(), n) > 0.0) {
     n = -n;
@@ -102,9 +102,9 @@ inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersec
   const vec3 wi = -unit_vector(r_in.direction());
   const double cos_i = std::max(0.0, dot(n, wi));
 
-  if (random_double() * k_plastic_n_sum < k_plastic_n_spec) {
+  if (rng.next() * k_plastic_n_sum < k_plastic_n_spec) {
     for (int attempt = 0; attempt < k_plastic_max_spec_tries; ++attempt) {
-      const vec3 h = plastic_sample_ggx(mat, n);
+      const vec3 h = plastic_sample_ggx(mat, n, rng);
       const double ndoth = dot(n, h);
       const double wih = dot(wi, h);
       if (ndoth <= k_plastic_eps || wih <= k_plastic_eps) {
@@ -132,7 +132,7 @@ inline bool plastic_scatter(const Material& mat, const ray& r_in, const intersec
     return false;
   }
 
-  const vec3 wo = unit_vector(lambertian_random(n));
+  const vec3 wo = unit_vector(lambertian_random(n, rng));
   const double ndotwo = dot(n, wo);
   if (ndotwo <= k_plastic_eps) {
     return false;

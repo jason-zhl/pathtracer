@@ -26,7 +26,7 @@ struct Material {
   bool is_emissive() const { return type == MaterialType::DiffuseLight; }
 
   bool scatter(const ray& r_in, const intersection& rec, color& attenuation,
-    ray& scattered) const;
+    ray& scattered, RNG& rng) const;
   color eval(const ray& r_in, const intersection& rec, const vec3& wo) const;
   double pdf(const ray& r_in, const intersection& rec, const vec3& wo) const;
   color emitted(const ray& r_in, const intersection& rec) const;
@@ -61,14 +61,14 @@ inline Material Material::diffuse_light(const vec3& emit) {
 #include "diffuse_light.h"
 
 inline bool Material::scatter(const ray& r_in, const intersection& rec, color& attenuation,
-  ray& scattered) const {
+  ray& scattered, RNG& rng) const {
   switch (type) {
     case MaterialType::Lambertian:
-      return lambertian_scatter(*this, r_in, rec, attenuation, scattered);
+      return lambertian_scatter(*this, r_in, rec, attenuation, scattered, rng);
     case MaterialType::Plastic:
-      return plastic_scatter(*this, r_in, rec, attenuation, scattered);
+      return plastic_scatter(*this, r_in, rec, attenuation, scattered, rng);
     case MaterialType::DiffuseLight:
-      return diffuse_light_scatter(*this, r_in, rec, attenuation, scattered);
+      return diffuse_light_scatter(*this, r_in, rec, attenuation, scattered, rng);
   }
   return false;
 }

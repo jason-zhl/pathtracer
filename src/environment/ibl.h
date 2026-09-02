@@ -18,7 +18,7 @@ class ibl : public environment {
     vec3 value(const vec3& direction) const override;
 
     /** Sample direction proportional to luminance × sin(θ) on the equirect grid; pdf w.r.t. solid angle. */
-    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle) const override;
+    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const override;
 
     /** Pdf for discrete env sampling at the texel covering `direction` (consistent with sample_direction). */
     double pdf(const vec3& direction) const override;

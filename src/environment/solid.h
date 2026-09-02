@@ -10,7 +10,8 @@ class solid : public environment {
 
     vec3 value(const vec3& /*direction*/) const override { return colour_; }
 
-    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle) const override {
+    void sample_direction(vec3& out_direction, double& out_pdf_solid_angle, RNG& rng) const override {
+      (void)rng;
       out_pdf_solid_angle = 0.0;
       out_direction = vec3(0, 1, 0);
     }

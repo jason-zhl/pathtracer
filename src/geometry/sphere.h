@@ -35,8 +35,9 @@ inline vec3 sphere_normal(const Geometry& g, const vec3& point) {
   return point - g.center;
 }
 
-inline bool sphere_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area) {
-  n = random_unit_vector();
+inline bool sphere_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area,
+  RNG& rng) {
+  n = random_unit_vector(rng);
   p = g.center + g.radius * n;
   pdf_area = 1.0 / (4.0 * PI * g.radius * g.radius);
   return true;

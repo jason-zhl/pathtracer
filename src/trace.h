@@ -18,7 +18,7 @@ inline double mis_weight_power(double pdf_self, double pdf_other) {
   return denom > 0.0 ? a / denom : 0.0;
 }
 
-inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
+inline color ray_colour(const ray& r, const camera& cam, const world& scene, RNG& rng) {
   color L(0, 0, 0);
   color throughput(1, 1, 1);
   ray curr_ray = r;
@@ -71,7 +71,7 @@ inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
     if (scene.has_material(isect.mat_id)) {
       vec3 wo_env;
       double pdf_env = 0.0;
-      scene.sample_env(wo_env, pdf_env);
+      scene.sample_env(wo_env, pdf_env, rng);
       if (pdf_env > 0.0 && dot(n, wo_env) > 0.0) {
         ray env_ray(isect.point + n * 1e-3, wo_env);
         intersection shadow_isect;
@@ -88,7 +88,7 @@ inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
 
     if (scene.has_area_lights() && scene.has_material(isect.mat_id)
       && !scene.material(isect.mat_id).is_emissive()) {
-      current += scene.area_light_nee(curr_ray, isect, n);
+      current += scene.area_light_nee(curr_ray, isect, n, rng);
     }
 
     L += throughput * current;
@@ -96,7 +96,7 @@ inline color ray_colour(const ray& r, const camera& cam, const world& scene) {
     ray scattered;
     color attenuation;
     if (!scene.has_material(isect.mat_id)
-      || !scene.material(isect.mat_id).scatter(curr_ray, isect, attenuation, scattered)) {
+      || !scene.material(isect.mat_id).scatter(curr_ray, isect, attenuation, scattered, rng)) {
       break;
     }
 

@@ -38,9 +38,10 @@ inline vec3 plane_normal(const Geometry& g, const vec3& point) {
   return g.n;
 }
 
-inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area) {
-  const double su = random_double();
-  const double sv = random_double();
+inline bool plane_sample_emitter_point(const Geometry& g, vec3& p, vec3& n, double& pdf_area,
+  RNG& rng) {
+  const double su = rng.next();
+  const double sv = rng.next();
   p = g.corner + su * g.u + sv * g.v;
   n = unit_vector(g.n);
   const double a = std::sqrt(g.n_len_sq);

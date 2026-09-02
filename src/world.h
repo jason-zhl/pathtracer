@@ -101,8 +101,8 @@ class world {
 
     vec3 get_env(const vec3& direction) const { return env_->value(direction); }
 
-    void sample_env(vec3& out_direction, double& out_pdf) const {
-      env_->sample_direction(out_direction, out_pdf);
+    void sample_env(vec3& out_direction, double& out_pdf, RNG& rng) const {
+      env_->sample_direction(out_direction, out_pdf, rng);
     }
 
     double env_pdf(const vec3& direction) const { return env_->pdf(direction); }
@@ -111,13 +111,14 @@ class world {
      * One-sample area direct lighting: uniform light, uniform point (area pdf), shadow ray.
      * MIS (power, β=2) vs mixture BSDF pdf at ω toward the sample reduces glossy double-count / spikes.
      */
-    color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade) const {
+    color area_light_nee(const ray& r_in, const intersection& isect, const vec3& n_shade,
+      RNG& rng) const {
       if (area_lights_.empty() || !has_material(isect.mat_id)) {
         return color(0, 0, 0);
       }
 
       const auto n_lights = area_lights_.size();
-      const auto idx = static_cast<size_t>(random_double() * static_cast<double>(n_lights));
+      const auto idx = static_cast<size_t>(rng.next() * static_cast<double>(n_lights));
       const size_t pick = idx >= n_lights ? n_lights - 1 : idx;
       const int geom_id = area_lights_[pick];
       if (!has_geometry(geom_id)) {
@@ -132,7 +133,7 @@ class world {
       vec3 pL;
       vec3 nL;
       double pdf_a = 0.0;
-      if (!geom.sample_emitter_point(pL, nL, pdf_a) || pdf_a <= 0.0) {
+      if (!geom.sample_emitter_point(pL, nL, pdf_a, rng) || pdf_a <= 0.0) {
         return color(0, 0, 0);
       }
 

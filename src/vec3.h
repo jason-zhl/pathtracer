@@ -1,7 +1,7 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include "host_device.h"
+#include "rng.h"
 
 #include <cmath>
 #include <iostream>
@@ -128,25 +128,25 @@ HOST_DEVICE inline void orthonormal_basis(const vec3& n, vec3& t, vec3& b) {
   b = vec3(sign * b_val, sign + n.y() * n.y() * a, -n.y());
 }
 
-inline vec3 random_unit_vector() {
+HOST_DEVICE inline vec3 random_unit_vector(RNG& rng) {
   for (;;) {
-    vec3 p(random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0, random_double() * 2.0 - 1.0);
+    vec3 p(rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0, rng.next() * 2.0 - 1.0);
     const double len2 = p.length_squared();
     if (len2 <= 1.0 && len2 > 1e-20) {
-      return p / std::sqrt(len2);
+      return p / hd_sqrt(len2);
     }
   }
 }
 
 // Cosine-weighted importance sampling for diffuse surfaces
-inline vec3 lambertian_random(const vec3& n) {
-  double u = random_double();
-  double v = random_double();
+HOST_DEVICE inline vec3 lambertian_random(const vec3& n, RNG& rng) {
+  double u = rng.next();
+  double v = rng.next();
   double phi = 2 * PI * u;
-  double r = std::sqrt(v);
-  double x = r * std::cos(phi);
-  double y = r * std::sin(phi);
-  double z = std::sqrt(1.0 - v);
+  double r = hd_sqrt(v);
+  double x = r * hd_cos(phi);
+  double y = r * hd_sin(phi);
+  double z = hd_sqrt(1.0 - v);
   vec3 t, b;
   orthonormal_basis(n, t, b);
   return t * x + b * y + n * z;

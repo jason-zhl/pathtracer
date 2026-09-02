@@ -34,7 +34,7 @@ struct Geometry {
 
   bool hit(const ray& r, const interval* t_range, intersection& isect) const;
   vec3 normal(const vec3& point) const;
-  bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const;
+  bool sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const;
   double surface_area() const;
 };
 
@@ -83,12 +83,12 @@ inline vec3 Geometry::normal(const vec3& point) const {
   return vec3();
 }
 
-inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area) const {
+inline bool Geometry::sample_emitter_point(vec3& p, vec3& n, double& pdf_area, RNG& rng) const {
   switch (type) {
     case GeometryType::Sphere:
-      return sphere_sample_emitter_point(*this, p, n, pdf_area);
+      return sphere_sample_emitter_point(*this, p, n, pdf_area, rng);
     case GeometryType::PlanePatch:
-      return plane_sample_emitter_point(*this, p, n, pdf_area);
+      return plane_sample_emitter_point(*this, p, n, pdf_area, rng);
   }
   return false;
 }
