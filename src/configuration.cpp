@@ -43,6 +43,7 @@ camera camera_from_yaml(const YAML::Node& root, const std::string& path) {
     const vec3 up = cam["up"] ? read_vec3(cam["up"], "camera.up") : vec3(0.0f, 1.0f, 0.0f);
     const float focus_dist = cam["focus_dist"] ? cam["focus_dist"].as<float>() : 5.5f;
     const float aperture = cam["aperture"] ? cam["aperture"].as<float>() : 0.0f;
+    const float exposure = cam["exposure"] ? cam["exposure"].as<float>() : 1.0f;
 
     return camera(
       require(cam, "width", ctx).as<int>(),
@@ -53,7 +54,8 @@ camera camera_from_yaml(const YAML::Node& root, const std::string& path) {
       up,
       require(cam, "vfov", ctx).as<float>(),
       focus_dist,
-      aperture);
+      aperture,
+      exposure);
   } catch (const YAML::Exception& e) {
     throw std::runtime_error("'" + path + "': " + e.what());
   }

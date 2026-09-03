@@ -16,9 +16,10 @@ class camera {
   public:
     camera(int image_width, float aspect_ratio, int samples_per_pixel,
            const vec3& look_from, const vec3& look_at, const vec3& up,
-           float vfov_degrees, float focus_dist = 5.5f, float aperture_radius = 0.0f)
+           float vfov_degrees, float focus_dist = 5.5f, float aperture_radius = 0.0f,
+           float exposure = 1.0f)
       : image_width_(image_width), samples_per_pixel_(samples_per_pixel),
-        aperture_radius_(aperture_radius) {
+        aperture_radius_(aperture_radius), exposure_(exposure) {
       image_height_ = static_cast<int>(image_width_ / aspect_ratio);
       if (image_height_ < 1) {
         image_height_ = 1;
@@ -72,6 +73,9 @@ class camera {
     HOST_DEVICE int samples_per_pixel() const { return samples_per_pixel_; }
     HOST_DEVICE int max_depth() const { return max_depth_; }
     HOST_DEVICE const interval& ray_t() const { return ray_t_; }
+    HOST_DEVICE color tonemap(const color& hdr) const {
+      return gamma_filter(ACESFilm(hdr * exposure_));
+    }
 
     void render(const World& world, std::ofstream* out) const {
       if (out == nullptr) {
@@ -118,6 +122,7 @@ class camera {
     float aperture_radius_ = 0.0f;
     vec3 defocus_disk_u_;
     vec3 defocus_disk_v_;
+    float exposure_ = 1.0f;
 };
 
 #include "trace.h"
@@ -138,7 +143,7 @@ inline void camera::render_cpu(const World& world, color* pixels, int64_t total_
         pixel_color += ray_colour(primary_ray(i, j, rng), *this, scene, rng);
       }
       pixel_color /= static_cast<float>(samples_per_pixel_);
-      pixels[static_cast<int64_t>(j) * image_width_ + i] = pixel_color;
+      pixels[static_cast<int64_t>(j) * image_width_ + i] = tonemap(pixel_color);
     }
 
     const auto done = static_cast<int64_t>(j + 1) * image_width_;

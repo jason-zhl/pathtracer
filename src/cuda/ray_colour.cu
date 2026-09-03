@@ -25,6 +25,7 @@ __global__ void ray_colour_kernel(float* rgb, camera cam, Scene scene) {
     pixel += ray_colour(cam.primary_ray(x, y, rng), cam, scene, rng);
   }
   pixel /= static_cast<float>(spp);
+  pixel = cam.tonemap(pixel);
 
   const int idx = (y * width + x) * 3;
   rgb[idx + 0] = pixel.x();

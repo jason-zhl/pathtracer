@@ -7,7 +7,7 @@
 using color = vec3;
 
 // Simplified ACES Narkowicz implementation
-inline vec3 ACESFilm(const vec3& x) {
+HOST_DEVICE inline vec3 ACESFilm(const vec3& x) {
     const float a = 2.51f;
     const float b = 0.03f;
     const float c = 2.43f;
@@ -18,14 +18,16 @@ inline vec3 ACESFilm(const vec3& x) {
                 clamp(y.z(), 0.0f, 1.0f));
 }
 
-// static constexpr float exposure = 1.2;
+HOST_DEVICE inline vec3 gamma_filter(const vec3& x) {
+    constexpr float inv_gamma = 1.0f / 2.2f;
+    return vec3(powf(x.x(), inv_gamma), powf(x.y(), inv_gamma),
+                powf(x.z(), inv_gamma));
+}
 
 inline void write_color(std::ostream &out, const color& pixel_color) {
-  // const auto scaled = ACESFilm(pixel_color * exposure);
-  const auto scaled = ACESFilm(pixel_color);
-  out << static_cast<int>(255.999f * scaled.x()) << ' '
-      << static_cast<int>(255.999f * scaled.y()) << ' '
-      << static_cast<int>(255.999f * scaled.z()) << '\n';
+  out << static_cast<int>(255.999f * pixel_color.x()) << ' '
+      << static_cast<int>(255.999f * pixel_color.y()) << ' '
+      << static_cast<int>(255.999f * pixel_color.z()) << '\n';
 }
 
 #endif

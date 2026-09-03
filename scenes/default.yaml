@@ -2,32 +2,33 @@ camera:
   width: 800
   aspect: 1.0
   samples: 2000
-  look_from: [0.0, 3.0, 0.0]
-  look_at: [0.0, 3.0, 15.0]
+  look_from: [0.0, 2.0, 0.0]
+  look_at: [0.0, 2.0, 1.0]
   up: [0.0, 1.0, 0.0]
   vfov: 40.0
-  focus_dist: 15.0
-  aperture: 0.25
+  focus_dist: 10.0
+  aperture: 0.20
+  exposure: 0.75
 
 environment:
   type: solid
-  colour: [1.0, 1.0, 1.0]
+  colour: [0.85, 0.9, 1.0]
 
 materials:
   ground:
     type: lambertian
-    albedo: [1.0, 1.0, 1.0]
+    albedo: [0.9, 0.9, 0.9]
   red:
     type: plastic
     albedo: [0.85, 0.15, 0.12]
-    roughness: 0.12
+    roughness: 0.02
   green:
     type: plastic
     albedo: [0.314, 0.784, 0.12]
-    roughness: 0.12
+    roughness: 0.02
   light:
     type: diffuse_light
-    emission: [50.0, 50.0, 50.0]
+    emission: [30.0, 30.0, 30.0]
 
 objects:
   - type: plane_patch
@@ -36,15 +37,15 @@ objects:
     v: [0.0, 0.0, 100.0]
     material: ground
   - type: sphere
-    center: [0.0, 3.0, 15.0]
-    radius: 3.0
+    center: [0.0, 2.0, 10.0]
+    radius: 2.0
     material: red
   - type: sphere
-    center: [-2.0, 0.5, 8.0]
+    center: [-1.8, 0.5, 8.5]
     radius: 0.5
     material: green
   - type: sphere
-    center: [-20.0, 40.0, 0.0]
-    radius: 6.0
+    center: [-10.0, 14.0, 6.0]
+    radius: 2.0
     material: light
     area_light: true
