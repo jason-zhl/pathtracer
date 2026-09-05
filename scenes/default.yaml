@@ -8,27 +8,27 @@ camera:
   vfov: 40.0
   focus_dist: 10.0
   aperture: 0.20
-  exposure: 0.75
+  exposure: 0.6
 
 environment:
   type: solid
-  colour: [0.85, 0.9, 1.0]
+  colour: [0.53, 0.81, 0.92]
 
 materials:
   ground:
     type: lambertian
-    albedo: [0.9, 0.9, 0.9]
+    albedo: [0.5, 0.5, 0.5]
   red:
     type: plastic
     albedo: [0.85, 0.15, 0.12]
-    roughness: 0.02
+    roughness: 0.04
   green:
     type: plastic
     albedo: [0.314, 0.784, 0.12]
-    roughness: 0.02
+    roughness: 0.04
   light:
     type: diffuse_light
-    emission: [30.0, 30.0, 30.0]
+    emission: [2000.0, 2000.0, 2000.0]
 
 objects:
   - type: plane_patch
@@ -45,7 +45,7 @@ objects:
     radius: 0.5
     material: green
   - type: sphere
-    center: [-10.0, 14.0, 6.0]
-    radius: 2.0
+    center: [-50.0, 70.0, 6.0]
+    radius: 3.0
     material: light
     area_light: true
