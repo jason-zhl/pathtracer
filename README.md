@@ -1,7 +1,7 @@
 # PathTracer
 
 Monte Carlo path tracer in C++/CUDA: indirect lighting, glossy materials, and optional HDR environments.
-
+![Render](outputs/stage5.png)
 ## Features
 
 - **Path tracing** — Multi-bounce Monte Carlo (`ray_colour`), configurable max depth and samples per pixel on the `camera`, with subpixel jitter for antialiasing.
